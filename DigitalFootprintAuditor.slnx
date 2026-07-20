@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DigitalFootprintAuditor.Api/DigitalFootprintAuditor.Api.csproj" />
+    <Project Path="src/DigitalFootprintAuditor.Application/DigitalFootprintAuditor.Application.csproj" />
+    <Project Path="src/DigitalFootprintAuditor.Domain/DigitalFootprintAuditor.Domain.csproj" />
+    <Project Path="src/DigitalFootprintAuditor.Infrastructure/DigitalFootprintAuditor.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DigitalFootprintAuditor.UnitTests/DigitalFootprintAuditor.UnitTests.csproj" />
+  </Folder>
+</Solution>

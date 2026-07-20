@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+    <!-- Microsoft.AspNetCore.OpenApi, Microsoft.OpenApi 2.0.0'ı transitif getirir; bu sürümde
+         bilinen bir güvenlik zafiyeti (GHSA-v5pm-xwqc-g5wc) olduğu için sürümü sabitliyoruz. -->
+    <PackageReference Include="Microsoft.OpenApi" Version="2.7.6" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="9.0.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DigitalFootprintAuditor.Application\DigitalFootprintAuditor.Application.csproj" />
+    <ProjectReference Include="..\DigitalFootprintAuditor.Infrastructure\DigitalFootprintAuditor.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
