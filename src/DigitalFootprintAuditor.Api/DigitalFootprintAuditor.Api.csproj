@@ -8,6 +8,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <!-- Microsoft.AspNetCore.OpenApi, Microsoft.OpenApi 2.0.0'ı transitif getirir; bu sürümde
          bilinen bir güvenlik zafiyeti (GHSA-v5pm-xwqc-g5wc) olduğu için sürümü sabitliyoruz. -->
     <PackageReference Include="Microsoft.OpenApi" Version="2.7.6" />
