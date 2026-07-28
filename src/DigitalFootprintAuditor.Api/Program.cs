@@ -4,8 +4,19 @@ using DigitalFootprintAuditor.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using DigitalFootprintAuditor.Infrastructure.Scanners;
 using System.Text.Json.Serialization;
+using DigitalFootprintAuditor.Infrastructure.GitHub;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddHttpClient<GitHubClient>(client =>
+{
+    client.BaseAddress = new Uri("https://api.github.com/");
+    client.DefaultRequestHeaders.UserAgent.ParseAdd(
+        "DigitalFootprintAuditor/1.0");
+    client.DefaultRequestHeaders.Accept.ParseAdd(
+        "application/vnd.github+json");
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
 
 // OpenAPI (Swagger) belge üretimi. Geliştirme ortamında /swagger adresinden görüntülenir.
 builder.Services.AddOpenApi();
