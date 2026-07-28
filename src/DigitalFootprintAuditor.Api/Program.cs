@@ -20,21 +20,19 @@ var builder = WebApplication.CreateBuilder(args);
 // [x] Harici servisin sonsuza kadar beklenmemesi için timeout tanımlandı.
 // [x] Gün 8: 404, 403/rate limit ve diğer hata durumları yönetilecek.
 // [ ] İlerleyen aşamalarda diğer dış servis istemcileri eklenecek.
-
-//github için
 builder.Services.AddHttpClient<GitHubClient>(client =>
 {
     client.BaseAddress = new Uri("https://api.github.com/");
-
-    client.DefaultRequestHeaders.UserAgent.ParseAdd(
-        "DigitalFootprintAuditor/1.0");
-
-    client.DefaultRequestHeaders.Accept.ParseAdd(
-        "application/vnd.github+json");
-
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("DigitalFootprintAuditor/1.0");
+    client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
     client.Timeout = TimeSpan.FromSeconds(10);
 });
 
+// OpenAPI (Swagger) belge üretimi.
+// Geliştirme ortamında /swagger adresinden görüntülenir.
+builder.Services.AddOpenApi();
+
+//github için
 //gravatar için
 var gravatarBaseUrl = 
     builder.Configuration["ExternalServices:Gravatar:BaseUrl"]
