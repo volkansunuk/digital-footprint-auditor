@@ -1,12 +1,12 @@
+using DigitalFootprintAuditor.Application.Abstractions;
+using DigitalFootprintAuditor.Application.Dtos;
+using DigitalFootprintAuditor.Application.Validators;
 using DigitalFootprintAuditor.Infrastructure.Gravatar;
 using DigitalFootprintAuditor.Infrastructure.GitHub;
 using DigitalFootprintAuditor.Infrastructure.Persistence;
+using DigitalFootprintAuditor.Infrastructure.Rdap;
 using DigitalFootprintAuditor.Infrastructure.Scanners;
 using DigitalFootprintAuditor.Infrastructure.Services;
-using DigitalFootprintAuditor.Infrastructure.Rdap;
-using DigitalFootprintAuditor.Application.Dtos;
-using DigitalFootprintAuditor.Application.Validators;
-using DigitalFootprintAuditor.Application.Abstractions;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
@@ -34,12 +34,12 @@ builder.Services.AddOpenApi();
 
 //github için
 //gravatar için
-var gravatarBaseUrl = 
+var gravatarBaseUrl =
     builder.Configuration["ExternalServices:Gravatar:BaseUrl"]
     ?? throw new InvalidOperationException(
         "Gravatar BaseUrl configuration is missing");
 
-builder.Services.AddHttpClient<IGravatarClient, GravatarClient>(client=>
+builder.Services.AddHttpClient<IGravatarClient, GravatarClient>(client =>
 {
     client.BaseAddress = new Uri(gravatarBaseUrl);
     client.Timeout = TimeSpan.FromSeconds(10);
@@ -51,13 +51,8 @@ builder.Services.AddHttpClient<IRdapClient, RdapClient>(client =>
 {
     client.BaseAddress = new Uri("https://rdap.org/");
     client.Timeout = TimeSpan.FromSeconds(10);
-    client.DefaultRequestHeaders.Accept.ParseAdd(
-        "application/rdap+json");
+    client.DefaultRequestHeaders.Accept.ParseAdd("application/rdap+json");
 });
-
-// OpenAPI (Swagger) belge üretimi.
-// Development ortamında /swagger adresinden görüntülenir.
-builder.Services.AddOpenApi();
 
 // Aşama 3 — EF Core ve veritabanı
 // [x] ApplicationDbContext DI sistemine kaydedildi.

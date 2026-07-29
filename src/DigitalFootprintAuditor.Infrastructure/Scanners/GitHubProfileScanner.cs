@@ -6,13 +6,6 @@ using DigitalFootprintAuditor.Infrastructure.GitHub.Models;
 
 namespace DigitalFootprintAuditor.Infrastructure.Scanners;
 
-// Gün 7 — GitHub scanner geliştirme ve API response mapping
-//
-// [x] GitHubClient üzerinden profil bilgisini ister.
-// [x] GitHub response modelini Domain ScanFinding nesnelerine dönüştürür.
-// [x] Bilgilendirme bulguları ile mahremiyet risklerini ayırır.
-// [x] CancellationToken değerini GitHubClient'a iletir.
-
 public sealed class GitHubProfileScanner : IScanner
 {
     private readonly GitHubClient _gitHubClient;
@@ -37,13 +30,64 @@ public sealed class GitHubProfileScanner : IScanner
 
         var findings = new List<ScanFinding>();
 
-        GitHubUserResponse? profile;
-
         try
         {
-            profile = await _gitHubClient.GetUserAsync(
+            var profile = await _gitHubClient.GetUserAsync(
                 target.TargetValue,
                 cancellationToken);
+
+            if (profile is null)
+            {
+                findings.Add(CreateFinding(
+                    target.ScanId,
+                    title: "GitHub Profili Bulunamadı",
+                    description:
+                        $"'{target.TargetValue}' kullanıcı adına ait herkese açık bir GitHub profili bulunamadı.",
+                    severity: FindingSeverity.Info,
+                    scoreImpact: 0));
+
+                return findings;
+            }
+
+            findings.Add(CreateFinding(
+                target.ScanId,
+                title: "GitHub Profili Tespit Edildi",
+                description:
+                    $"'{profile.Login}' kullanıcı adlı GitHub profili bulundu. " +
+                    $"Public repository sayısı: {profile.PublicRepos}.",
+                severity: FindingSeverity.Info,
+                scoreImpact: 0));
+
+            if (!string.IsNullOrWhiteSpace(profile.Email))
+            {
+                findings.Add(CreateFinding(
+                    target.ScanId,
+                    title: "Herkese Açık E-Posta Adresi Bulundu",
+                    description:
+                        "GitHub profilinde herkese açık bir e-posta adresi bulunuyor.",
+                    severity: FindingSeverity.Medium,
+                    scoreImpact: 10));
+            }
+
+            if (!string.IsNullOrWhiteSpace(profile.Bio))
+            {
+                findings.Add(CreateFinding(
+                    target.ScanId,
+                    title: "GitHub Profil Biyografisi Mevcut",
+                    description:
+                        "GitHub profilinde herkese açık bir biyografi bilgisi bulunuyor.",
+                    severity: FindingSeverity.Info,
+                    scoreImpact: 0));
+            }
+
+            findings.Add(CreateFinding(
+                target.ScanId,
+                title: "GitHub Hesap Bilgileri",
+                description:
+                    $"Hesap oluşturulma tarihi: {profile.CreatedAt:yyyy-MM-dd}. " +
+                    $"Son güncelleme tarihi: {profile.UpdatedAt:yyyy-MM-dd}.",
+                severity: FindingSeverity.Info,
+                scoreImpact: 0));
         }
         catch (TimeoutException)
         {
@@ -54,8 +98,6 @@ public sealed class GitHubProfileScanner : IScanner
                     "GitHub API isteği belirlenen süre içinde tamamlanamadı.",
                 severity: FindingSeverity.Low,
                 scoreImpact: 0));
-
-            return findings;
         }
         catch (HttpRequestException)
         {
@@ -66,63 +108,7 @@ public sealed class GitHubProfileScanner : IScanner
                     "GitHub API ile iletişim kurulurken bir bağlantı veya HTTP hatası oluştu.",
                 severity: FindingSeverity.Low,
                 scoreImpact: 0));
-
-            return findings;
         }
-
-        //404 not found durumu
-        if (profile is null)
-        {
-            findings.Add(CreateFinding(
-                target.ScanId,
-                title: "GitHub Profili Bulunamadı",
-                description:
-                    $"'{target.TargetValue}' kullanıcı adına ait herkese açık bir GitHub profili bulunamadı.",
-                severity: FindingSeverity.Info,
-                scoreImpact: 0));
-
-            return findings;
-        }
-
-        findings.Add(CreateFinding(
-            target.ScanId,
-            title: "GitHub Profili Tespit Edildi",
-            description:
-                $"'{profile.Login}' kullanıcı adlı GitHub profili bulundu. " +
-                $"Public repository sayısı: {profile.PublicRepos}.",
-            severity: FindingSeverity.Info,
-            scoreImpact: 0));
-
-        if (!string.IsNullOrWhiteSpace(profile.Email))
-        {
-            findings.Add(CreateFinding(
-                target.ScanId,
-                title: "Herkese Açık E-Posta Adresi Bulundu",
-                description:
-                    "GitHub profilinde herkese açık bir e-posta adresi bulunuyor.",
-                severity: FindingSeverity.Medium,
-                scoreImpact: 10));
-        }
-
-        if (!string.IsNullOrWhiteSpace(profile.Bio))
-        {
-            findings.Add(CreateFinding(
-                target.ScanId,
-                title: "GitHub Profil Biyografisi Mevcut",
-                description:
-                    "GitHub profilinde herkese açık bir biyografi bilgisi bulunuyor.",
-                severity: FindingSeverity.Info,
-                scoreImpact: 0));
-        }
-
-        findings.Add(CreateFinding(
-            target.ScanId,
-            title: "GitHub Hesap Bilgileri",
-            description:
-                $"Hesap oluşturulma tarihi: {profile.CreatedAt:yyyy-MM-dd}. " +
-                $"Son güncelleme tarihi: {profile.UpdatedAt:yyyy-MM-dd}.",
-            severity: FindingSeverity.Info,
-            scoreImpact: 0));
 
         return findings;
     }
@@ -134,7 +120,7 @@ public sealed class GitHubProfileScanner : IScanner
         FindingSeverity severity,
         int scoreImpact)
     {
-        return new ScanFinding  
+        return new ScanFinding
         {
             ScanId = scanId,
             ScannerName = nameof(GitHubProfileScanner),

@@ -1,7 +1,6 @@
 namespace DigitalFootprintAuditor.Infrastructure.GitHub.Models;
 using System.Text.Json.Serialization;
 
-/* public-> bu sınıfı başka namespaceler de kullanabilir, sealed->kimse bu sınıftan miras almasın*/
 public sealed class GitHubUserResponse
 {
     [JsonPropertyName("login")]

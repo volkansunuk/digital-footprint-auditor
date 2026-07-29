@@ -13,7 +13,9 @@ public sealed class GitHubClient
         _httpClient = httpClient;
     }
 
-    public async Task<GitHubUserResponse?> GetUserAsync(string username, CancellationToken cancellationToken)
+    public async Task<GitHubUserResponse?> GetUserAsync(
+        string username,
+        CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(username);
 
