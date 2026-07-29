@@ -6,7 +6,6 @@ public sealed class GitHubUserResponse
 {
     [JsonPropertyName("login")] //bu property'nin JSON'daki karşılığı logindir
     public string Login {get; init;} = string.Empty; //init->property sadece oluşturulurken atanır, immutable yaparız
-    //string.empty-> null olamaz demek
     
     [JsonPropertyName("email")] 
     public string? Email{get; init;} //kullanıcı bu bilgileri paylaşmamış olabileceğinden null gelebilir

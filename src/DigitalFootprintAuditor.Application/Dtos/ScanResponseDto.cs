@@ -11,5 +11,5 @@ public record ScanResponseDto(
     int RiskScore,
     RiskLevel RiskLevel,
     IReadOnlyCollection<ScanTargetInputDto> Targets,
-    List<ScanFindingDto> Findings
+    IReadOnlyCollection<ScanFindingDto> Findings
 );

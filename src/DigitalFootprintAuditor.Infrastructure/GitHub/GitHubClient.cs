@@ -12,10 +12,16 @@ public sealed class GitHubClient //sealed:bu sınıftan miras alınmaz
         _httpClient = httpClient; //Constructordan gelen HttpClient, sınıfın private field’ına atanır. diğer metotlar da kullanabilir.
     }
 
-    public async Task<GitHubUserResponse?> GetUserAsync(string username, CancellationToken cancellationToken)
+    public Task<GitHubUserResponse?> GetUserAsync(
+        string username,
+        CancellationToken cancellationToken)
     {
-        return await _httpClient.GetFromJsonAsync<GitHubUserResponse>(
-            $"users/{username}",
+        ArgumentException.ThrowIfNullOrWhiteSpace(username);
+
+        var escapedUsername = Uri.EscapeDataString(username.Trim());
+
+        return _httpClient.GetFromJsonAsync<GitHubUserResponse>(
+            $"users/{escapedUsername}",
             cancellationToken);
     }
 }

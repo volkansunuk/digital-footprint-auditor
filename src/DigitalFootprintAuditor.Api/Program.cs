@@ -1,55 +1,67 @@
 using DigitalFootprintAuditor.Application.Abstractions;
+using DigitalFootprintAuditor.Infrastructure.GitHub;
 using DigitalFootprintAuditor.Infrastructure.Persistence;
+using DigitalFootprintAuditor.Infrastructure.Scanners;
 using DigitalFootprintAuditor.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
-using DigitalFootprintAuditor.Infrastructure.Scanners;
 using System.Text.Json.Serialization;
-using DigitalFootprintAuditor.Infrastructure.GitHub;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Aşama 5 — GitHub dış servis istemcisi
+// [x] GitHubClient typed HttpClient olarak kaydedildi.
+// [x] GitHub API temel adresi yapılandırıldı.
+// [x] GitHub için gerekli User-Agent ve Accept header'ları eklendi.
+// [x] Harici servisin sonsuza kadar beklenmemesi için timeout tanımlandı.
+// [ ] Gün 8: 404, 403/rate limit ve diğer hata durumları yönetilecek.
+// [ ] İlerleyen aşamalarda diğer dış servis istemcileri eklenecek.
 builder.Services.AddHttpClient<GitHubClient>(client =>
 {
     client.BaseAddress = new Uri("https://api.github.com/");
+
     client.DefaultRequestHeaders.UserAgent.ParseAdd(
         "DigitalFootprintAuditor/1.0");
+
     client.DefaultRequestHeaders.Accept.ParseAdd(
         "application/vnd.github+json");
+
     client.Timeout = TimeSpan.FromSeconds(10);
 });
 
-// OpenAPI (Swagger) belge üretimi. Geliştirme ortamında /swagger adresinden görüntülenir.
+// OpenAPI (Swagger) belge üretimi.
+// Development ortamında /swagger adresinden görüntülenir.
 builder.Services.AddOpenApi();
 
-// TODO (Aşama 3+): EF Core DbContext kaydı buraya eklenecek.
+// Aşama 3 — EF Core ve veritabanı
+// [x] ApplicationDbContext DI sistemine kaydedildi.
+// [x] Veritabanı sağlayıcısı olarak SQL Server seçildi.
+// [x] DefaultConnection değeri configuration üzerinden okunuyor.
+// [ ] İleride yeni entity veya configuration eklenirse DbContext güncellenecek.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-    /* 
-    AddDbContext<ApplicationDbContext>: Uygulamaya "Sana veritabanı işlemleri için 
-    ApplicationDbContext sınıfını emanet ediyorum" dedik.
-    UseSqlServer(...): "Veritabanı sürücüsü olarak SQL Server kullan" dedik.
-    GetConnectionString("DefaultConnection"): "Bağlantı adresi olarak da az önce appsettings.json içine
-     yazdığımız DefaultConnection anahtarındaki adresi oku" dedik.*/
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// TODO (Aşama 4+): Application servisleri (IScanService vb.) buraya eklenecek.
+// Aşama 4 — Application servisleri
+// [x] IScanService istendiğinde ScanService kullanılacak.
+// [ ] İleride eklenecek application servisleri burada kaydedilecek.
 builder.Services.AddScoped<IScanService, ScanService>();
 
-// TODO (Aşama 5+): Scanner servisleri ve HttpClientFactory kayıtları buraya eklenecek.
-// Her scanner IScanner arayüzü üzerinden kaydediliyor ki ileride orkestrasyon
-// servisi IEnumerable<IScanner> ile hepsine tek seferde erişebilsin.
-builder.Services.AddHttpClient<IScanner, GitHubProfileScanner>(client =>
-{
-    client.BaseAddress = new Uri("https://api.github.com/");
-    client.DefaultRequestHeaders.Add("User-Agent", "DigitalFootprintAuditor");
-    client.Timeout = TimeSpan.FromSeconds(10);
-});
+// Aşama 5 — Scanner kayıtları
+// [x] GitHubProfileScanner, IScanner sözleşmesi üzerinden kaydedildi.
+// [ ] İlerleyen aşamalarda Gravatar, RDAP, DNS, HTTPS ve diğer scanner'lar eklenecek.
+// [ ] Orchestration aşamasında bütün scanner'lar IEnumerable<IScanner>
+//     üzerinden toplu şekilde çözümlenecek.
+builder.Services.AddScoped<IScanner, GitHubProfileScanner>();
 
-// Controller servislerini ve API Explorer'ı sisteme tanıtır
+// Controller servislerini ve JSON ayarlarını sisteme tanıtır.
+// Enum değerlerinin API response içinde sayı yerine metin olarak gösterilmesini sağlar.
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter());
     });
+
 builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
@@ -57,9 +69,12 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/openapi/v1.json", "Digital Footprint Auditor API v1");
+        options.SwaggerEndpoint(
+            "/openapi/v1.json",
+            "Digital Footprint Auditor API v1");
     });
 }
 
@@ -72,9 +87,10 @@ app.MapGet("/", () => Results.Ok(new
     status = "Running"
 }));
 
-// TODO (Aşama 4): /api/scans endpointleri burada (veya ayrı bir dosyada) tanımlanacak.
-// Endpointler ayrı bir dosyada (Controllers/ScansController.cs) tanımlandı;
-// aşağıdaki satır o controller'ı API yönlendirme haritasına ekler (KRİTİK ADIM).
+// Aşama 4 — Scan API
+// [x] Endpointler Controllers/ScansController.cs dosyasına taşındı.
+// [x] MapControllers çağrısı controller endpointlerini routing sistemine ekliyor.
+// [ ] Yeni controller eklendiğinde ayrıca MapControllers çağrısı eklemek gerekmez.
 app.MapControllers();
 
 app.Run();
