@@ -81,8 +81,9 @@ public class GitHubProfileScannerTests
             findings,
             finding => Assert.Equal(target.ScanId, finding.ScanId));
     }
-
-    [Fact(Skip = "Gün 8: 404 hata yönetimi eklendikten sonra tamamlanacak.")]
+     
+     //404 Not Found Testi
+    [Fact]
     public async Task ScanAsync_ShouldReturnNotFoundFinding_WhenUserDoesNotExist()
     {
         // Arrange
@@ -113,7 +114,8 @@ public class GitHubProfileScannerTests
         Assert.Equal(FindingSeverity.Info, findingList[0].Severity);
     }
 
-    [Fact(Skip = "Gün 8: Ağ hatası yönetimi eklendikten sonra tamamlanacak.")]
+    //Ağ hatası testi
+    [Fact]
     public async Task ScanAsync_ShouldHandleNetworkError_WhenHttpRequestFails()
     {
         // Arrange
@@ -155,4 +157,154 @@ public class GitHubProfileScannerTests
         Assert.Contains("Ulaşılamadı", findingList[0].Title);
         Assert.Equal(FindingSeverity.Low, findingList[0].Severity);
     }
+
+    //403 Rate Limit Testi
+    [Fact]
+    public async Task ScanAsync_ShouldReturnUnavailableFinding_WhenRateLimitIsExceeded()
+    {
+        // Arrange
+        var mockHttpClient = CreateMockHttpClient(
+            HttpStatusCode.Forbidden,
+            string.Empty);
+
+        var gitHubClient = new GitHubClient(mockHttpClient);
+        var scanner = new GitHubProfileScanner(gitHubClient);
+
+        var target = new ScanTarget
+        {
+            ScanId = Guid.NewGuid(),
+            TargetType = TargetType.GitHubUsername,
+            TargetValue = "testuser"
+        };
+
+        // Act
+        var findings = await scanner.ScanAsync(
+            target,
+            CancellationToken.None);
+
+        // Assert
+        var findingList = findings.ToList();
+
+        Assert.Single(findingList);
+        Assert.Contains("Ulaşılamadı", findingList[0].Title);
+        Assert.Equal(FindingSeverity.Low, findingList[0].Severity);
+    }
+
+    //TimeOut Testi
+    [Fact]
+    public async Task ScanAsync_ShouldReturnTimeoutFinding_WhenRequestTimesOut()
+    {
+        // Arrange
+        var handlerMock = new Mock<HttpMessageHandler>();
+
+        handlerMock
+            .Protected()
+            .Setup<Task<HttpResponseMessage>>(
+                "SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>())
+            .ThrowsAsync(
+                new TaskCanceledException("İstek zaman aşımına uğradı."));
+
+        var httpClient = new HttpClient(handlerMock.Object)
+        {
+            BaseAddress = new Uri("https://api.github.com/")
+        };
+
+        var gitHubClient = new GitHubClient(httpClient);
+        var scanner = new GitHubProfileScanner(gitHubClient);
+
+        var target = new ScanTarget
+        {
+            ScanId = Guid.NewGuid(),
+            TargetType = TargetType.GitHubUsername,
+            TargetValue = "testuser"
+        };
+
+        // Act
+        var findings = await scanner.ScanAsync(
+            target,
+            CancellationToken.None);
+
+        // Assert
+        var findingList = findings.ToList();
+
+        Assert.Single(findingList);
+        Assert.Contains("Zaman Aşımına Uğradı", findingList[0].Title);
+        Assert.Equal(FindingSeverity.Low, findingList[0].Severity);
+    }
+
+    //Kullanıcı iptali testi
+    [Fact]
+    public async Task ScanAsync_ShouldPropagateCancellation_WhenCallerCancelsRequest()
+    {
+        // Arrange
+        var handlerMock = new Mock<HttpMessageHandler>();
+
+        handlerMock
+            .Protected()
+            .Setup<Task<HttpResponseMessage>>(
+                "SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>())
+            .ThrowsAsync(new OperationCanceledException());
+
+        var httpClient = new HttpClient(handlerMock.Object)
+        {
+            BaseAddress = new Uri("https://api.github.com/")
+        };
+
+        var gitHubClient = new GitHubClient(httpClient);
+        var scanner = new GitHubProfileScanner(gitHubClient);
+
+        var target = new ScanTarget
+        {
+            ScanId = Guid.NewGuid(),
+            TargetType = TargetType.GitHubUsername,
+            TargetValue = "testuser"
+        };
+
+        using var cancellationTokenSource =
+            new CancellationTokenSource();
+
+        cancellationTokenSource.Cancel();
+
+        // Act & Assert
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => scanner.ScanAsync(
+                target,
+                cancellationTokenSource.Token));
+    }
+
+    //500 server error testi
+    [Fact]
+    public async Task ScanAsync_ShouldReturnUnavailableFinding_WhenServerReturnsError()
+    {
+        // Arrange
+        var mockHttpClient = CreateMockHttpClient(
+            HttpStatusCode.InternalServerError,
+            string.Empty);
+
+        var gitHubClient = new GitHubClient(mockHttpClient);
+        var scanner = new GitHubProfileScanner(gitHubClient);
+
+        var target = new ScanTarget
+        {
+            ScanId = Guid.NewGuid(),
+            TargetType = TargetType.GitHubUsername,
+            TargetValue = "testuser"
+        };
+
+        // Act
+        var findings = await scanner.ScanAsync(
+            target,
+            CancellationToken.None);
+
+        // Assert
+        var findingList = findings.ToList();
+
+        Assert.Single(findingList);
+        Assert.Contains("Ulaşılamadı", findingList[0].Title);
+        Assert.Equal(FindingSeverity.Low, findingList[0].Severity);
+    }   
 }

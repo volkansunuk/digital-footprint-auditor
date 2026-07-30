@@ -3,6 +3,9 @@ using DigitalFootprintAuditor.Infrastructure.GitHub;
 using DigitalFootprintAuditor.Infrastructure.Persistence;
 using DigitalFootprintAuditor.Infrastructure.Scanners;
 using DigitalFootprintAuditor.Infrastructure.Services;
+using DigitalFootprintAuditor.Application.Dtos;
+using DigitalFootprintAuditor.Application.Validators;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
@@ -13,7 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 // [x] GitHub API temel adresi yapılandırıldı.
 // [x] GitHub için gerekli User-Agent ve Accept header'ları eklendi.
 // [x] Harici servisin sonsuza kadar beklenmemesi için timeout tanımlandı.
-// [ ] Gün 8: 404, 403/rate limit ve diğer hata durumları yönetilecek.
+// [x] Gün 8: 404, 403/rate limit ve diğer hata durumları yönetilecek.
 // [ ] İlerleyen aşamalarda diğer dış servis istemcileri eklenecek.
 builder.Services.AddHttpClient<GitHubClient>(client =>
 {
@@ -45,6 +48,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // [x] IScanService istendiğinde ScanService kullanılacak.
 // [ ] İleride eklenecek application servisleri burada kaydedilecek.
 builder.Services.AddScoped<IScanService, ScanService>();
+builder.Services.AddScoped<IValidator<CreateScanRequestDto>, CreateScanRequestValidator>();
+builder.Services.AddScoped<IValidator<ScanTargetInputDto>, ScanTargetInputValidator>();
 
 // Aşama 5 — Scanner kayıtları
 // [x] GitHubProfileScanner, IScanner sözleşmesi üzerinden kaydedildi.

@@ -2,6 +2,7 @@ using DigitalFootprintAuditor.Application.Abstractions;
 using DigitalFootprintAuditor.Domain.Entities;
 using DigitalFootprintAuditor.Domain.Enums;
 using DigitalFootprintAuditor.Infrastructure.GitHub;
+using DigitalFootprintAuditor.Infrastructure.GitHub.Models;
 
 namespace DigitalFootprintAuditor.Infrastructure.Scanners;
 
@@ -36,13 +37,50 @@ public sealed class GitHubProfileScanner : IScanner
 
         var findings = new List<ScanFinding>();
 
-        var profile = await _gitHubClient.GetUserAsync(
-            target.TargetValue,
-            cancellationToken);
+        GitHubUserResponse? profile;
 
-        // 404 ve diğer başarısız HTTP sonuçları Gün 8'de ayrıca yönetilecek.
+        try
+        {
+            profile = await _gitHubClient.GetUserAsync(
+                target.TargetValue,
+                cancellationToken);
+        }
+        catch (TimeoutException)
+        {
+            findings.Add(CreateFinding(
+                target.ScanId,
+                title: "GitHub API Zaman Aşımına Uğradı",
+                description:
+                    "GitHub API isteği belirlenen süre içinde tamamlanamadı.",
+                severity: FindingSeverity.Low,
+                scoreImpact: 0));
+
+            return findings;
+        }
+        catch (HttpRequestException)
+        {
+            findings.Add(CreateFinding(
+                target.ScanId,
+                title: "GitHub API'ye Ulaşılamadı",
+                description:
+                    "GitHub API ile iletişim kurulurken bir bağlantı veya HTTP hatası oluştu.",
+                severity: FindingSeverity.Low,
+                scoreImpact: 0));
+
+            return findings;
+        }
+
+        //404 not found durumu
         if (profile is null)
         {
+            findings.Add(CreateFinding(
+                target.ScanId,
+                title: "GitHub Profili Bulunamadı",
+                description:
+                    $"'{target.TargetValue}' kullanıcı adına ait herkese açık bir GitHub profili bulunamadı.",
+                severity: FindingSeverity.Info,
+                scoreImpact: 0));
+
             return findings;
         }
 
@@ -96,7 +134,7 @@ public sealed class GitHubProfileScanner : IScanner
         FindingSeverity severity,
         int scoreImpact)
     {
-        return new ScanFinding
+        return new ScanFinding  
         {
             ScanId = scanId,
             ScannerName = nameof(GitHubProfileScanner),
