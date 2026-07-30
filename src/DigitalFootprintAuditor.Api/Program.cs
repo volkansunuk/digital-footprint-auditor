@@ -1,10 +1,11 @@
-using DigitalFootprintAuditor.Application.Abstractions;
+using DigitalFootprintAuditor.Infrastructure.Gravatar;
 using DigitalFootprintAuditor.Infrastructure.GitHub;
 using DigitalFootprintAuditor.Infrastructure.Persistence;
 using DigitalFootprintAuditor.Infrastructure.Scanners;
 using DigitalFootprintAuditor.Infrastructure.Services;
 using DigitalFootprintAuditor.Application.Dtos;
 using DigitalFootprintAuditor.Application.Validators;
+using DigitalFootprintAuditor.Application.Abstractions;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
@@ -18,6 +19,8 @@ var builder = WebApplication.CreateBuilder(args);
 // [x] Harici servisin sonsuza kadar beklenmemesi için timeout tanımlandı.
 // [x] Gün 8: 404, 403/rate limit ve diğer hata durumları yönetilecek.
 // [ ] İlerleyen aşamalarda diğer dış servis istemcileri eklenecek.
+
+//github için
 builder.Services.AddHttpClient<GitHubClient>(client =>
 {
     client.BaseAddress = new Uri("https://api.github.com/");
@@ -29,6 +32,19 @@ builder.Services.AddHttpClient<GitHubClient>(client =>
         "application/vnd.github+json");
 
     client.Timeout = TimeSpan.FromSeconds(10);
+});
+
+//gravatar için
+var gravatarBaseUrl = 
+    builder.Configuration["ExternalServices:Gravatar:BaseUrl"]
+    ?? throw new InvalidOperationException(
+        "Gravatar BaseUrl configuration is missing");
+
+builder.Services.AddHttpClient<IGravatarClient, GravatarClient>(client=>
+{
+    client.BaseAddress = new Uri(gravatarBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(10);
+    client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
 });
 
 // OpenAPI (Swagger) belge üretimi.
@@ -57,6 +73,7 @@ builder.Services.AddScoped<IValidator<ScanTargetInputDto>, ScanTargetInputValida
 // [ ] Orchestration aşamasında bütün scanner'lar IEnumerable<IScanner>
 //     üzerinden toplu şekilde çözümlenecek.
 builder.Services.AddScoped<IScanner, GitHubProfileScanner>();
+builder.Services.AddScoped<IScanner, GravatarScanner>();
 
 // Controller servislerini ve JSON ayarlarını sisteme tanıtır.
 // Enum değerlerinin API response içinde sayı yerine metin olarak gösterilmesini sağlar.
