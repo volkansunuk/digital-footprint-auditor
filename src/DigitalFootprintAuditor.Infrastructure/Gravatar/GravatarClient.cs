@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using DigitalFootprintAuditor.Application.Abstractions;
 using DigitalFootprintAuditor.Application.Models;
 using DigitalFootprintAuditor.Infrastructure.Gravatar.Models;
-
 namespace DigitalFootprintAuditor.Infrastructure.Gravatar;
 
 public sealed class GravatarClient : IGravatarClient

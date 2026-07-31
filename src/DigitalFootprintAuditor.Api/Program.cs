@@ -3,6 +3,7 @@ using DigitalFootprintAuditor.Infrastructure.GitHub;
 using DigitalFootprintAuditor.Infrastructure.Persistence;
 using DigitalFootprintAuditor.Infrastructure.Scanners;
 using DigitalFootprintAuditor.Infrastructure.Services;
+using DigitalFootprintAuditor.Infrastructure.Rdap;
 using DigitalFootprintAuditor.Application.Dtos;
 using DigitalFootprintAuditor.Application.Validators;
 using DigitalFootprintAuditor.Application.Abstractions;
@@ -47,6 +48,15 @@ builder.Services.AddHttpClient<IGravatarClient, GravatarClient>(client=>
     client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
 });
 
+//rdap için
+builder.Services.AddHttpClient<IRdapClient, RdapClient>(client =>
+{
+    client.BaseAddress = new Uri("https://rdap.org/");
+    client.Timeout = TimeSpan.FromSeconds(10);
+    client.DefaultRequestHeaders.Accept.ParseAdd(
+        "application/rdap+json");
+});
+
 // OpenAPI (Swagger) belge üretimi.
 // Development ortamında /swagger adresinden görüntülenir.
 builder.Services.AddOpenApi();
@@ -74,6 +84,7 @@ builder.Services.AddScoped<IValidator<ScanTargetInputDto>, ScanTargetInputValida
 //     üzerinden toplu şekilde çözümlenecek.
 builder.Services.AddScoped<IScanner, GitHubProfileScanner>();
 builder.Services.AddScoped<IScanner, GravatarScanner>();
+builder.Services.AddScoped<IScanner, RdapDomainScanner>();
 
 // Controller servislerini ve JSON ayarlarını sisteme tanıtır.
 // Enum değerlerinin API response içinde sayı yerine metin olarak gösterilmesini sağlar.
