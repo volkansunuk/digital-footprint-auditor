@@ -68,7 +68,7 @@ public class GitHubProfileScannerTests
         Assert.All(findings, finding => Assert.Equal(target.ScanId, finding.ScanId));
     }
 
-    [Fact(Skip = "Gün 8: 404 hata yönetimi eklendikten sonra tamamlanacak.")]
+    [Fact]
     public async Task ScanAsync_ShouldReturnNotFoundFinding_WhenUserDoesNotExist()
     {
         var mockHttpClient = CreateMockHttpClient(HttpStatusCode.NotFound, string.Empty);

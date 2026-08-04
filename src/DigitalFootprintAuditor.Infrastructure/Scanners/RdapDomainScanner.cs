@@ -68,14 +68,15 @@ public sealed class RdapDomainScanner : IScanner
                 $"Domain: {result.Domain}. " +
                 $"Kayıt tarihi: {FormatDate(result.RegistrationDate)}. " +
                 $"Son güncelleme: {FormatDate(result.UpdatedDate)}. " +
-                $"Nameserver sayısı: {result.Nameservers.Count}.";
+                $"Registrar: {FormatRegistrar(result.Registrar)}. " +
+                $"{FormatNameserverSummary(result.Nameservers)}";
 
             findings.Add(CreateFinding(
                 target.ScanId,
                 "Domain RDAP Kaydı Bulundu",
-                description,
+                description + " Bu bulgu, domainin kayıt bilgileriyle birlikte görünür olduğunu gösterir ve risk değerlendirmesinde bir sinyal olarak dikkate alınır.",
                 FindingSeverity.Info,
-                0));
+                3));
 
             return findings;
         }
@@ -96,6 +97,17 @@ public sealed class RdapDomainScanner : IScanner
                 target.ScanId,
                 "RDAP Servisine Ulaşılamadı",
                 "RDAP servisiyle iletişim kurulurken hata oluştu.",
+                FindingSeverity.Low,
+                0));
+
+            return findings;
+        }
+        catch (OperationCanceledException)
+        {
+            findings.Add(CreateFinding(
+                target.ScanId,
+                "RDAP İsteği İptal Edildi",
+                "RDAP isteği kullanıcı veya zaman aşımı nedeniyle iptal edildi.",
                 FindingSeverity.Low,
                 0));
 
@@ -150,6 +162,21 @@ public sealed class RdapDomainScanner : IScanner
     private static string FormatDate(DateTimeOffset? date)
     {
         return date?.ToString("yyyy-MM-dd") ?? "bilinmiyor";
+    }
+
+    private static string FormatRegistrar(string? registrar)
+    {
+        return string.IsNullOrWhiteSpace(registrar) ? "bilinmiyor" : registrar;
+    }
+
+    private static string FormatNameserverSummary(IReadOnlyCollection<string> nameservers)
+    {
+        if (nameservers.Count == 0)
+        {
+            return "Nameserver kaydı bulunamadı.";
+        }
+
+        return $"Nameserver sayısı: {nameservers.Count}.";
     }
 
     private static ScanFinding CreateFinding(

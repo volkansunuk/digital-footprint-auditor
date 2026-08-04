@@ -51,9 +51,10 @@ public sealed class GravatarScanner : IScanner
             findings.Add(CreateFinding(
                 target.ScanId,
                 "Gravatar Profili Bulundu",
-                "Bu e-posta hash'i ile eşleşen herkese açık bir Gravatar profili bulundu.",
+                "Bu e-posta hash'i ile eşleşen herkese açık bir Gravatar profili bulundu. " +
+                "Bu bulgu, görünür bir dijital kimlik izinin olduğunu gösterir ve risk puanlamasında dikkate alınır.",
                 FindingSeverity.Info,
-                0));
+                5));
 
             return findings;
         }

@@ -64,7 +64,8 @@ public sealed class GitHubProfileScanner : IScanner
                     target.ScanId,
                     title: "Herkese Açık E-Posta Adresi Bulundu",
                     description:
-                        "GitHub profilinde herkese açık bir e-posta adresi bulunuyor.",
+                        "GitHub profilinde herkese açık bir e-posta adresi bulunuyor. " +
+                        "Bu, kişisel bilgilerin daha kolay erişilebilir hale gelmesi nedeniyle risk oluşturan bir bulgudur.",
                     severity: FindingSeverity.Medium,
                     scoreImpact: 10));
             }

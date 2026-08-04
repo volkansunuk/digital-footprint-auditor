@@ -1,15 +1,18 @@
 using DigitalFootprintAuditor.Application.Abstractions;
 using DigitalFootprintAuditor.Application.Dtos;
 using DigitalFootprintAuditor.Application.Validators;
+using DigitalFootprintAuditor.Application.Services;
 using DigitalFootprintAuditor.Infrastructure.Gravatar;
 using DigitalFootprintAuditor.Infrastructure.GitHub;
 using DigitalFootprintAuditor.Infrastructure.Persistence;
 using DigitalFootprintAuditor.Infrastructure.Rdap;
 using DigitalFootprintAuditor.Infrastructure.Scanners;
 using DigitalFootprintAuditor.Infrastructure.Services;
+using DigitalFootprintAuditor.Infrastructure.Dns;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
+using DnsClient;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,8 +70,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // [x] IScanService istendiğinde ScanService kullanılacak.
 // [ ] İleride eklenecek application servisleri burada kaydedilecek.
 builder.Services.AddScoped<IScanService, ScanService>();
+builder.Services.AddScoped<RiskScoringService>();
 builder.Services.AddScoped<IValidator<CreateScanRequestDto>, CreateScanRequestValidator>();
 builder.Services.AddScoped<IValidator<ScanTargetInputDto>, ScanTargetInputValidator>();
+
 
 // Aşama 5 — Scanner kayıtları
 // [x] GitHubProfileScanner, IScanner sözleşmesi üzerinden kaydedildi.
@@ -78,6 +83,12 @@ builder.Services.AddScoped<IValidator<ScanTargetInputDto>, ScanTargetInputValida
 builder.Services.AddScoped<IScanner, GitHubProfileScanner>();
 builder.Services.AddScoped<IScanner, GravatarScanner>();
 builder.Services.AddScoped<IScanner, RdapDomainScanner>();
+builder.Services.AddSingleton<DnsClient.LookupClient>();
+builder.Services.AddScoped<
+    IDnsClient,
+    DigitalFootprintAuditor.Infrastructure.Dns.DnsClient>();
+builder.Services.AddScoped<IScanner, DnsSecurityScanner>();
+
 
 // Controller servislerini ve JSON ayarlarını sisteme tanıtır.
 // Enum değerlerinin API response içinde sayı yerine metin olarak gösterilmesini sağlar.

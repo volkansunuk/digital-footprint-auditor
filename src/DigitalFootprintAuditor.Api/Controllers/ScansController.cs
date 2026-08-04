@@ -1,8 +1,9 @@
-namespace DigitalFootprintAuditor.Api.Controllers;
 using DigitalFootprintAuditor.Application.Abstractions;
 using DigitalFootprintAuditor.Application.Dtos;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+
+namespace DigitalFootprintAuditor.Api.Controllers;
 
 /* burası projenin dış dünyaya açılan kapısı*/
 

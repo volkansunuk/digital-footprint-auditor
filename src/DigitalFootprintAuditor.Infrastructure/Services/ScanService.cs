@@ -1,5 +1,6 @@
 using DigitalFootprintAuditor.Application.Abstractions;
 using DigitalFootprintAuditor.Application.Dtos;
+using DigitalFootprintAuditor.Application.Services;
 using DigitalFootprintAuditor.Domain.Entities;
 using DigitalFootprintAuditor.Domain.Enums;
 using DigitalFootprintAuditor.Infrastructure.Persistence;
@@ -11,9 +12,12 @@ public class ScanService : IScanService
 {
     private readonly ApplicationDbContext _dbContext;
 
-    public ScanService(ApplicationDbContext dbContext)
+    private readonly RiskScoringService _riskScoringService = new();
+
+    public ScanService(ApplicationDbContext dbContext) //***constructor
     {
         _dbContext = dbContext;
+        _riskScoringService = new RiskScoringService();
     }
 
     public async Task<ScanResponseDto> CreateScanAsync(
@@ -77,6 +81,9 @@ public class ScanService : IScanService
                 target.TargetValue))
             .ToListAsync(cancellationToken);
 
+        scan.RiskScore = _riskScoringService.CalculateScore(scan.Findings);
+        scan.RiskLevel = _riskScoringService.CalculateRiskLevel(scan.RiskScore);
+
         return new ScanResponseDto(
             scan.Id,
             scan.CreatedAt,
@@ -106,6 +113,7 @@ public class ScanService : IScanService
             .Where(target => scanIds.Contains(target.ScanId))
             .ToListAsync(cancellationToken);
 
+
         return scans
             .Select(scan =>
             {
@@ -115,6 +123,9 @@ public class ScanService : IScanService
                         target.TargetType,
                         target.TargetValue))
                     .ToList();
+
+                scan.RiskScore = _riskScoringService.CalculateScore(scan.Findings);
+                scan.RiskLevel = _riskScoringService.CalculateRiskLevel(scan.RiskScore);
 
                 return new ScanResponseDto(
                     scan.Id,
@@ -151,7 +162,7 @@ public class ScanService : IScanService
         return true;
     }
 
-    private static ScanFindingDto MapFindingToDto(ScanFinding finding)
+    private ScanFindingDto MapFindingToDto(ScanFinding finding)
     {
         return new ScanFindingDto(
             finding.Id,
