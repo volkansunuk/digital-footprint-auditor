@@ -13,6 +13,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using DnsClient;
+using DigitalFootprintAuditor.Infrastructure.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,6 +58,19 @@ builder.Services.AddHttpClient<IRdapClient, RdapClient>(client =>
     client.DefaultRequestHeaders.Accept.ParseAdd("application/rdap+json");
 });
 
+//website security için
+builder.Services
+    .AddHttpClient<IWebsiteSecurityClient, WebsiteSecurityClient>(
+        client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(10);
+        })
+    .ConfigurePrimaryHttpMessageHandler(() =>
+        new HttpClientHandler
+        {
+            AllowAutoRedirect = false
+        });
+
 // Aşama 3 — EF Core ve veritabanı
 // [x] ApplicationDbContext DI sistemine kaydedildi.
 // [x] Veritabanı sağlayıcısı olarak SQL Server seçildi.
@@ -73,6 +87,8 @@ builder.Services.AddScoped<IScanService, ScanService>();
 builder.Services.AddScoped<RiskScoringService>();
 builder.Services.AddScoped<IValidator<CreateScanRequestDto>, CreateScanRequestValidator>();
 builder.Services.AddScoped<IValidator<ScanTargetInputDto>, ScanTargetInputValidator>();
+builder.Services.AddScoped<IScanner, HttpsScanner>();
+builder.Services.AddScoped<IScanner, SecurityHeadersScanner>();
 
 
 // Aşama 5 — Scanner kayıtları
