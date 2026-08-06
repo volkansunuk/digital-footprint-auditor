@@ -101,6 +101,7 @@ builder.Services.AddScoped<IScanner, RdapDomainScanner>();
 builder.Services.AddScoped<IScanner, DnsSecurityScanner>();
 builder.Services.AddScoped<IScanner, HttpsScanner>();
 builder.Services.AddScoped<IScanner, SecurityHeadersScanner>();
+builder.Services.AddScoped<IScanner, GitHubRepositoryScanner>();
 
 //dns istemcisi
 builder.Services.AddSingleton<DnsClient.LookupClient>();
