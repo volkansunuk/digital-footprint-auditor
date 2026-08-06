@@ -60,32 +60,28 @@ public class ScanService : IScanService
         foreach (var target in targets)
         {
             var matchingScanners = _scanners
-            .Where(scanner =>
-                scanner.SupportedTargetTypes.Contains(
-                    target.TargetType))
-            .ToList();
+                .Where(scanner =>
+                    scanner.SupportedTargetTypes.Contains(
+                        target.TargetType))
+                .ToList();
 
-            foreach (var scanner in matchingScanners)
-            {
-                try
-                {
-                    var scannerFindings = await scanner.ScanAsync(
+            var scannerTasks = matchingScanners
+                .Select(scanner =>
+                    ExecuteScannerSafelyAsync(
+                        scanner,
                         target,
-                        cancellationToken);
+                        cancellationToken))
+                .ToList();
 
-                    allFindings.AddRange(scannerFindings);
-                }
-                catch (OperationCanceledException)
-                {
-                    throw;
-                }
-                catch (Exception)
+            var scannerResults = await Task.WhenAll(scannerTasks);
+
+            foreach (var scannerResult in scannerResults)
+            {
+                allFindings.AddRange(scannerResult.Findings);
+
+                if (scannerResult.HasFailed)
                 {
                     hasScannerFailure = true;
-
-                    allFindings.Add(CreateScannerFailureFinding(
-                        target.ScanId,
-                        scanner.GetType().Name));
                 }
             }
         }
@@ -107,9 +103,7 @@ public class ScanService : IScanService
             : ScanStatus.Completed;
         scan.CompletedAt = DateTime.UtcNow;
 
-        await _dbContext.SaveChangesAsync(
-            cancellationToken
-        );
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
 
         return new ScanResponseDto(
@@ -241,6 +235,37 @@ public class ScanService : IScanService
             finding.CreatedAt);
     }
 
+    private async Task<ScannerExecutionResult> ExecuteScannerSafelyAsync(
+        IScanner scanner,
+        ScanTarget target,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var findings = await scanner.ScanAsync(
+                target,
+                cancellationToken);
+
+            return new ScannerExecutionResult(
+                findings,
+                HasFailed: false);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            var failureFinding = CreateScannerFailureFinding(
+                target.ScanId,
+                scanner.GetType().Name);
+
+            return new ScannerExecutionResult(
+                new[] { failureFinding },
+                HasFailed: true);
+        }
+    }
+
     private static ScanFinding CreateScannerFailureFinding(
         Guid scanId,
         string scannerName)
@@ -260,4 +285,8 @@ public class ScanService : IScanService
             CreatedAt = DateTime.UtcNow
         };
     }
+
+    private sealed record ScannerExecutionResult(
+        IReadOnlyCollection<ScanFinding> Findings,
+        bool HasFailed);
 }

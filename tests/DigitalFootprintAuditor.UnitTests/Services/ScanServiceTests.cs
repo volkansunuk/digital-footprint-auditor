@@ -135,6 +135,98 @@ public class ScanServiceTests
             Assert.NotNull(result.CompletedAt);
     }
 
+    [Fact]
+    public async Task CreateScanAsync_ShouldExecuteMatchingScannersInParallel()
+    {
+        //arrange
+        await using var dbContext = CreateDbContext();
+
+        var startedScannerCount = 0;
+
+        var bothScannersStarted = 
+            new TaskCompletionSource<bool>(
+                TaskCreationOptions.RunContinuationsAsynchronously);    
+            
+        async Task<IReadOnlyCollection<ScanFinding>> ScannerHandler(
+            ScanTarget target,
+            CancellationToken cancellationToken)
+        {
+            var currentCount =
+                Interlocked.Increment(
+                    ref startedScannerCount);
+
+            if (currentCount == 2)
+            {
+                bothScannersStarted.TrySetResult(true);
+            }
+
+            await bothScannersStarted.Task.WaitAsync(
+                TimeSpan.FromSeconds(2),
+                cancellationToken);
+
+            return new[]
+            {
+                new ScanFinding
+                {
+                    Id = Guid.NewGuid(),
+                    ScanId = target.ScanId,
+                    ScannerName = "ParallelScanner",
+                    Title = "Paralel çalışma bulgusu",
+                    Description =
+                        "Scanner paralel olarak çalıştırıldı.",
+                    Severity = FindingSeverity.Info,
+                    ScoreImpact = 0,
+                    Source = "Test",
+                    CreatedAt = DateTime.UtcNow
+                }
+            };
+        }
+
+        var firstScanner = new StubScanner(
+            TargetType.Domain,
+            ScannerHandler);
+
+        var secondScanner = new StubScanner(
+            TargetType.Domain,
+            ScannerHandler);
+
+        var service = new ScanService(
+            dbContext,
+            new IScanner[]
+            {
+                firstScanner,
+                secondScanner
+            },
+            new RiskScoringService());
+
+        var request = new CreateScanRequestDto(
+            new[]
+            {
+                new ScanTargetInputDto(
+                    TargetType.Domain,
+                    "example.com")
+            });
+
+        // Act
+        var result = await service.CreateScanAsync(
+            request,
+            CancellationToken.None);
+
+        // Assert
+        Assert.Equal(
+            2,
+            startedScannerCount);
+
+        Assert.Equal(
+            2,
+            result.Findings.Count);
+
+        Assert.Equal(
+            ScanStatus.Completed,
+            result.Status);
+    }
+    
+
     //bir scanner başarısız olduğunda
     [Fact]
     public async Task CreateScanAsync_ShouldReturnPartiallyCompleted_WhenOneScannerFails()
