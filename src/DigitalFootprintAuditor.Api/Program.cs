@@ -75,20 +75,18 @@ builder.Services
 // [x] ApplicationDbContext DI sistemine kaydedildi.
 // [x] Veritabanı sağlayıcısı olarak SQL Server seçildi.
 // [x] DefaultConnection değeri configuration üzerinden okunuyor.
-// [ ] İleride yeni entity veya configuration eklenirse DbContext güncellenecek.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Aşama 4 — Application servisleri
 // [x] IScanService istendiğinde ScanService kullanılacak.
-// [ ] İleride eklenecek application servisleri burada kaydedilecek.
+// [x] application servisleri burada 
 builder.Services.AddScoped<IScanService, ScanService>();
 builder.Services.AddScoped<RiskScoringService>();
 builder.Services.AddScoped<IValidator<CreateScanRequestDto>, CreateScanRequestValidator>();
 builder.Services.AddScoped<IValidator<ScanTargetInputDto>, ScanTargetInputValidator>();
-builder.Services.AddScoped<IScanner, HttpsScanner>();
-builder.Services.AddScoped<IScanner, SecurityHeadersScanner>();
+
 
 
 // Aşama 5 — Scanner kayıtları
@@ -96,14 +94,20 @@ builder.Services.AddScoped<IScanner, SecurityHeadersScanner>();
 // [ ] İlerleyen aşamalarda Gravatar, RDAP, DNS, HTTPS ve diğer scanner'lar eklenecek.
 // [ ] Orchestration aşamasında bütün scanner'lar IEnumerable<IScanner>
 //     üzerinden toplu şekilde çözümlenecek.
+// Scanner kayıtları burada
 builder.Services.AddScoped<IScanner, GitHubProfileScanner>();
 builder.Services.AddScoped<IScanner, GravatarScanner>();
 builder.Services.AddScoped<IScanner, RdapDomainScanner>();
+builder.Services.AddScoped<IScanner, DnsSecurityScanner>();
+builder.Services.AddScoped<IScanner, HttpsScanner>();
+builder.Services.AddScoped<IScanner, SecurityHeadersScanner>();
+
+//dns istemcisi
 builder.Services.AddSingleton<DnsClient.LookupClient>();
+
 builder.Services.AddScoped<
     IDnsClient,
     DigitalFootprintAuditor.Infrastructure.Dns.DnsClient>();
-builder.Services.AddScoped<IScanner, DnsSecurityScanner>();
 
 
 // Controller servislerini ve JSON ayarlarını sisteme tanıtır.

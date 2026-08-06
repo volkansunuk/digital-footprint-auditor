@@ -294,8 +294,8 @@ public async Task ScanAsync_ShouldPropagateCancellation_WhenCallerCancelsRequest
         var target = new ScanTarget
         {
             ScanId = Guid.NewGuid(),
-            TargetType = TargetType.Domain,
-            TargetValue = "example.com"
+            TargetType = TargetType.Email,
+            TargetValue = "test@example.com"
         };
 
         // Act & Assert

@@ -86,9 +86,12 @@ public class RdapDomainScannerTests
     }
 
     [Fact]
-    public async Task ScanAsync_ShouldReturnCancellationFinding_WhenClientThrowsTaskCanceledException()
+    public async Task ScanAsync_ShouldPropagateCancellation_WhenCallerCancelsRequest()
     {
-        var scanner = new RdapDomainScanner(new StubRdapClient(_ => throw new TaskCanceledException()));
+        var scanner = new RdapDomainScanner(
+            new StubRdapClient(_ =>
+                throw new TaskCanceledException()));
+
         var target = new ScanTarget
         {
             ScanId = Guid.NewGuid(),
@@ -96,11 +99,10 @@ public class RdapDomainScannerTests
             TargetValue = "example.com"
         };
 
-        var findings = await scanner.ScanAsync(target, CancellationToken.None);
-
-        var finding = Assert.Single(findings);
-        Assert.Equal("RDAP İsteği İptal Edildi", finding.Title);
-        Assert.Equal(FindingSeverity.Low, finding.Severity);
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => scanner.ScanAsync(
+                target,
+                CancellationToken.None));
     }
 
     [Fact]

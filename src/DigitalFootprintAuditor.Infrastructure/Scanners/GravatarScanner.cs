@@ -14,13 +14,19 @@ public sealed class GravatarScanner : IScanner
         _gravatarClient = gravatarClient;
     }
 
-    public TargetType SupportedTargetType => TargetType.Email;
+    //***
+    public IReadOnlyCollection<TargetType> SupportedTargetTypes =>
+        new[] { TargetType.Email};
 
     public async Task<IReadOnlyCollection<ScanFinding>> ScanAsync(
         ScanTarget target,
         CancellationToken cancellationToken)
     {
-        if (target.TargetType != SupportedTargetType)
+        if (target is null)
+        {
+            throw new ArgumentNullException(nameof(target));
+        }
+        if (!SupportedTargetTypes.Contains(target.TargetType))
         {
             throw new ArgumentException(
                 "GravatarScanner yalnızca Email hedeflerini işler.",
@@ -28,6 +34,7 @@ public sealed class GravatarScanner : IScanner
         }
 
         var findings = new List<ScanFinding>();
+
         var emailHash = EmailHasher.Hash(target.TargetValue);
 
         try

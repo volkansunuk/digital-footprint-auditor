@@ -5,8 +5,8 @@ namespace DigitalFootprintAuditor.Application.Abstractions;
 
 public interface IScanner
 {
-    // Bu scanner'ın desteklediği hedef türünü belirtir (örn: TargetType.GitHubUsername).
-    TargetType SupportedTargetType { get; }
+    //scanner desteklediği türlerin koleksiyonunu bildirir
+    IReadOnlyCollection<TargetType> SupportedTargetTypes { get; }
 
     // Verilen hedef değerini ilgili dış serviste tarar ve tespit edilen bulguların listesini döner.
     // <param name="targetValue">Taranacak metinsel değer (örn: "octocat")</param>

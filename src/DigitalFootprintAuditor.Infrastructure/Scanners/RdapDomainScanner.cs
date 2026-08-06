@@ -14,16 +14,21 @@ public sealed class RdapDomainScanner : IScanner
         _rdapClient = rdapClient;
     }
 
-    public TargetType SupportedTargetType => TargetType.Domain;
+    public IReadOnlyCollection<TargetType> SupportedTargetTypes =>
+        new[] { TargetType.Domain};
 
     public async Task<IReadOnlyCollection<ScanFinding>> ScanAsync(
         ScanTarget target, 
         CancellationToken cancellationToken)
     {
-         if (target.TargetType != SupportedTargetType)
+        if(target is null)
+        {
+            throw new ArgumentNullException(nameof(target));
+        }
+         if (!SupportedTargetTypes.Contains(target.TargetType))
         {
             throw new ArgumentException(
-                "GravatarScanner yalnızca Domain hedeflerini işler.",
+                "RdapDomainScanner yalnızca Domain hedeflerini işler.",
                 nameof(target));
         }
 
@@ -97,17 +102,6 @@ public sealed class RdapDomainScanner : IScanner
                 target.ScanId,
                 "RDAP Servisine Ulaşılamadı",
                 "RDAP servisiyle iletişim kurulurken hata oluştu.",
-                FindingSeverity.Low,
-                0));
-
-            return findings;
-        }
-        catch (OperationCanceledException)
-        {
-            findings.Add(CreateFinding(
-                target.ScanId,
-                "RDAP İsteği İptal Edildi",
-                "RDAP isteği kullanıcı veya zaman aşımı nedeniyle iptal edildi.",
                 FindingSeverity.Low,
                 0));
 

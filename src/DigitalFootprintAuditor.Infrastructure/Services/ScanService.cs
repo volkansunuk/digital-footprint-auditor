@@ -11,13 +11,17 @@ namespace DigitalFootprintAuditor.Infrastructure.Services;
 public class ScanService : IScanService
 {
     private readonly ApplicationDbContext _dbContext;
+    private readonly IReadOnlyCollection<IScanner> _scanners;
+    private readonly RiskScoringService _riskScoringService;
 
-    private readonly RiskScoringService _riskScoringService = new();
-
-    public ScanService(ApplicationDbContext dbContext) //***constructor
+    public ScanService(
+        ApplicationDbContext dbContext,
+        IEnumerable<IScanner> scanners,
+        RiskScoringService riskScoringService)
     {
         _dbContext = dbContext;
-        _riskScoringService = new RiskScoringService();
+        _scanners = scanners.ToList();
+        _riskScoringService = riskScoringService;
     }
 
     public async Task<ScanResponseDto> CreateScanAsync(
@@ -48,6 +52,67 @@ public class ScanService : IScanService
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
+        scan.Status = ScanStatus.Running;
+
+        var allFindings = new List<ScanFinding>();
+
+        var hasScannerFailure = false;
+
+        foreach (var target in targets)
+        {
+            var matchingScanners = _scanners
+            .Where(scanner =>
+                scanner.SupportedTargetTypes.Contains(
+                    target.TargetType))
+            .ToList();
+
+            foreach (var scanner in matchingScanners)
+            {
+                try
+                {
+                    var scannerFindings = await scanner.ScanAsync(
+                        target,
+                        cancellationToken);
+
+                    allFindings.AddRange(scannerFindings);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception)
+                {
+                    hasScannerFailure = true;
+
+                    allFindings.Add(CreateScannerFailureFinding(
+                        target.ScanId,
+                        scanner.GetType().Name));
+                }
+            }
+        }
+
+        if (allFindings.Count > 0)
+        {
+            _dbContext.ScanFindings.AddRange(allFindings);
+        }
+
+        scan.RiskScore =
+            _riskScoringService.CalculateScore(allFindings);
+
+        scan.RiskLevel =
+            _riskScoringService.CalculateRiskLevel(
+                scan.RiskScore);
+
+        scan.Status = hasScannerFailure
+            ? ScanStatus.PartiallyCompleted
+            : ScanStatus.Completed;
+        scan.CompletedAt = DateTime.UtcNow;
+
+        await _dbContext.SaveChangesAsync(
+            cancellationToken
+        );
+
+
         return new ScanResponseDto(
             scan.Id,
             scan.CreatedAt,
@@ -56,7 +121,9 @@ public class ScanService : IScanService
             scan.RiskScore,
             scan.RiskLevel,
             request.Targets,
-            Array.Empty<ScanFindingDto>());
+            allFindings
+                .Select(MapFindingToDto)
+                .ToList());
     }
 
     public async Task<ScanResponseDto?> GetScanByIdAsync(
@@ -173,5 +240,25 @@ public class ScanService : IScanService
             finding.ScoreImpact,
             finding.Source,
             finding.CreatedAt);
+    }
+
+    private static ScanFinding CreateScannerFailureFinding(
+        Guid scanId,
+        string scannerName)
+    {
+        return new ScanFinding
+        {
+            Id = Guid.NewGuid(),
+            ScanId = scanId,
+            ScannerName = scannerName,
+            Title = $"{scannerName} çalıştırılamadı",
+            Description =
+                "Scanner çalışırken beklenmeyen bir hata oluştu. " +
+                "Diğer scanner işlemlerine devam edildi.",
+            Severity = FindingSeverity.Low,
+            ScoreImpact = 0,
+            Source = "Scanner Orchestration",
+            CreatedAt = DateTime.UtcNow
+        };
     }
 }

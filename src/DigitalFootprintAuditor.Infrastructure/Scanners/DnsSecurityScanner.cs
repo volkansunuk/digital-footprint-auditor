@@ -13,7 +13,8 @@ public sealed class DnsSecurityScanner : IScanner
         _dnsClient = dnsClient;
     }
 
-    public TargetType SupportedTargetType => TargetType.Domain;
+    public IReadOnlyCollection<TargetType> SupportedTargetTypes =>
+        new[] { TargetType.Domain };
 
     public async Task<IReadOnlyCollection<ScanFinding>> ScanAsync(
         ScanTarget target,
@@ -24,7 +25,7 @@ public sealed class DnsSecurityScanner : IScanner
             throw new ArgumentNullException(nameof(target));
         }
 
-        if (target.TargetType != SupportedTargetType)
+        if (!SupportedTargetTypes.Contains(target.TargetType))
         {
             throw new ArgumentException(
                 "DnsSecurityScanner yalnızca Domain hedeflerini işler.",

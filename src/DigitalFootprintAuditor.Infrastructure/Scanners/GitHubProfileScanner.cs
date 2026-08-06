@@ -14,14 +14,19 @@ public sealed class GitHubProfileScanner : IScanner
     {
         _gitHubClient = gitHubClient;
     }
-
-    public TargetType SupportedTargetType => TargetType.GitHubUsername;
+    //***
+    public IReadOnlyCollection<TargetType> SupportedTargetTypes =>
+        new[] { TargetType.GitHubUsername };
 
     public async Task<IReadOnlyCollection<ScanFinding>> ScanAsync(
         ScanTarget target,
         CancellationToken cancellationToken)
     {
-        if (target.TargetType != SupportedTargetType)
+        if (target is null)
+        {
+            throw new ArgumentNullException(nameof(target));
+        }
+        if (!SupportedTargetTypes.Contains(target.TargetType))
         {
             throw new ArgumentException(
                 "GitHubProfileScanner yalnızca GitHubUsername hedeflerini işler.",

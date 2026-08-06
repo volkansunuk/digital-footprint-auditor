@@ -14,7 +14,12 @@ public sealed class SecurityHeadersScanner : IScanner
         _websiteSecurityClient = websiteSecurityClient;
     }
 
-    public TargetType SupportedTargetType => TargetType.Website;
+    public IReadOnlyCollection<TargetType> SupportedTargetTypes =>
+        new[] 
+        { 
+            TargetType.Domain,
+            TargetType.Website
+        };
 
     public async Task<IReadOnlyCollection<ScanFinding>> ScanAsync(
         ScanTarget target,
@@ -25,10 +30,10 @@ public sealed class SecurityHeadersScanner : IScanner
             throw new ArgumentNullException(nameof(target));
         }
 
-        if (target.TargetType != SupportedTargetType)
+        if (!SupportedTargetTypes.Contains(target.TargetType))
         {
             throw new ArgumentException(
-                "SecurityHeadersScanner yalnızca Website hedeflerini işler.",
+                "SecurityHeadersScanner yalnızca Domain veya Website hedeflerini işler.",
                 nameof(target));
         }
 

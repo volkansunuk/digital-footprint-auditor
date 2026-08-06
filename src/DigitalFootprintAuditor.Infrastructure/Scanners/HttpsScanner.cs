@@ -13,7 +13,12 @@ public sealed class HttpsScanner : IScanner
         _websiteSecurityClient = websiteSecurityClient;
     }
 
-    public TargetType SupportedTargetType => TargetType.Website;
+    public IReadOnlyCollection<TargetType> SupportedTargetTypes =>
+        new[] 
+        { 
+            TargetType.Domain,
+            TargetType.Website
+        };
 
     public async Task<IReadOnlyCollection<ScanFinding>> ScanAsync(
         ScanTarget target,
@@ -23,11 +28,10 @@ public sealed class HttpsScanner : IScanner
         {
             throw new ArgumentNullException(nameof(target));
         }
-
-        if (target.TargetType != SupportedTargetType)
+        if (!SupportedTargetTypes.Contains(target.TargetType))
         {
             throw new ArgumentException(
-                "HttpsScanner yalnızca Website hedeflerini işler.",
+                "HttpScanner yalnızca Domain veya Website hedeflerini işler.",
                 nameof(target));
         }
 
