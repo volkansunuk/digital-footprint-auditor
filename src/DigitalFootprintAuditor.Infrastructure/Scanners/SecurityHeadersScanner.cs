@@ -54,7 +54,10 @@ public sealed class SecurityHeadersScanner : IScanner
                     title: "HSTS başlığı bulunamadı",
                     description:
                         "Strict-Transport-Security başlığı bulunamadı. " +
-                        "Bu başlık, tarayıcının siteye yalnızca HTTPS üzerinden bağlanmasını zorunlu hâle getirmeye yardımcı olur.",
+                        "Bu başlık, tarayıcının siteye yalnızca HTTPS üzerinden bağlanmasını " +
+                        "zorunlu hâle getirmeye yardımcı olur. Başlığın eksik olması, " +
+                        "kullanıcının güvenli olmayan bir HTTP bağlantısına yönlendirilmesi riskini artırabilir. " +
+                        "Bu bulgu toplam risk puanına 5 puan ekler.",
                     severity: FindingSeverity.Low,
                     scoreImpact: 5));
             }
@@ -68,7 +71,9 @@ public sealed class SecurityHeadersScanner : IScanner
                         "Content-Security-Policy başlığı bulunamadı",
                     description:
                         "Content-Security-Policy başlığı bulunamadı. " +
-                        "Bu başlık, tarayıcının hangi kaynaklardan içerik yükleyebileceğini sınırlandırarak içerik enjeksiyonu risklerini azaltmaya yardımcı olur.",
+                        "Bu başlık, tarayıcının hangi kaynaklardan içerik yükleyebileceğini sınırlandırarak " +
+                        "XSS ve içerik enjeksiyonu saldırılarının etkisini azaltmaya yardımcı olur. " +
+                        "Bu bulgu toplam risk puanına 5 puan ekler.",
                     severity: FindingSeverity.Low,
                     scoreImpact: 5));
             }
@@ -82,7 +87,8 @@ public sealed class SecurityHeadersScanner : IScanner
                         "X-Content-Type-Options başlığı bulunamadı",
                     description:
                         "X-Content-Type-Options başlığı bulunamadı. " +
-                        "Bu başlık, tarayıcının içerik türünü tahmin etmesini engellemeye yardımcı olur.",
+                        "Bu başlık, tarayıcının içerik türünü tahmin etmesini engellemeye yardımcı olur." + 
+                        "Bu kontrol bilgi amaçlı raporlanır ve mevcut eğitim modelinde risk puanını artırmaz.",
                     severity: FindingSeverity.Low,
                     scoreImpact: 0));
             }
@@ -95,7 +101,8 @@ public sealed class SecurityHeadersScanner : IScanner
                     title: "Referrer-Policy başlığı bulunamadı",
                     description:
                         "Referrer-Policy başlığı bulunamadı. " +
-                        "Bu başlık, başka sitelere yönlendirme sırasında ne kadar adres bilgisinin paylaşılacağını sınırlandırır.",
+                        "Bu başlık, başka sitelere yönlendirme sırasında ne kadar adres bilgisinin paylaşılacağını sınırlandırır." + 
+                        "Bu kontrol bilgi amaçlı raporlanır ve mevcut eğitim modelinde risk puanını artırmaz.",
                     severity: FindingSeverity.Info,
                     scoreImpact: 0));
             }
@@ -109,7 +116,8 @@ public sealed class SecurityHeadersScanner : IScanner
                         "Permissions-Policy başlığı bulunamadı",
                     description:
                         "Permissions-Policy başlığı bulunamadı. " +
-                        "Bu başlık; kamera, mikrofon ve konum gibi tarayıcı özelliklerinin kullanımını sınırlandırmaya yardımcı olur.",
+                        "Bu başlık; kamera, mikrofon ve konum gibi tarayıcı özelliklerinin kullanımını sınırlandırmaya yardımcı olur." + 
+                        "Bu kontrol bilgi amaçlı raporlanır ve mevcut eğitim modelinde risk puanını artırmaz.",
                     severity: FindingSeverity.Info,
                     scoreImpact: 0));
             }
@@ -120,7 +128,9 @@ public sealed class SecurityHeadersScanner : IScanner
                     target.ScanId,
                     title: "Temel güvenlik başlıkları bulundu",
                     description:
-                        "Web sitesi kontrol edilen temel HTTP güvenlik başlıklarını kullanıyor.",
+                        "Web sitesinde HSTS, Content-Security-Policy, X-Content-Type-Options, " +
+                        "Referrer-Policy ve Permissions-Policy başlıkları bulundu. " +
+                        "Güvenlik başlıkları kontrolünde risk puanını artıran bir eksiklik tespit edilmedi.",
                     severity: FindingSeverity.Info,
                     scoreImpact: 0));
             }

@@ -127,5 +127,9 @@ public class RdapDomainScannerTests
         var finding = Assert.Single(findings);
         Assert.Contains("Registrar: bilinmiyor.", finding.Description);
         Assert.Contains("Nameserver kaydı bulunamadı.", finding.Description);
+
+        Assert.Equal(0, finding.ScoreImpact);
+
+        Assert.Contains("risk puanını artırmaz", finding.Description);
     }
 }

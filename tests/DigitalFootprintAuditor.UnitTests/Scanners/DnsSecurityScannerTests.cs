@@ -61,19 +61,43 @@ public class DnsSecurityScannerTests
             target,
             CancellationToken.None);
 
-        Assert.Contains(
+        var spfFinding = Assert.Single(
             findings,
             finding =>
                 finding.Title == "SPF kaydı bulunamadı");
 
-        Assert.Contains(
+        var dmarcFinding = Assert.Single(
             findings,
             finding =>
                 finding.Title == "DMARC kaydı bulunamadı");
+
+        Assert.Equal(
+            FindingSeverity.Low,
+            spfFinding.Severity);
+
+        Assert.Equal(
+            10,
+            spfFinding.ScoreImpact);
+
+        Assert.Contains(
+            "10 puan",
+            spfFinding.Description);
+
+        Assert.Equal(
+            FindingSeverity.Medium,
+            dmarcFinding.Severity);
+
+        Assert.Equal(
+            15,
+            dmarcFinding.ScoreImpact);
+
+        Assert.Contains(
+            "15 puan",
+            dmarcFinding.Description);
     }
 
     [Fact]
-    public async Task TaskAsync_ShoulNotReportSpfOrDmarc_WhenRecordsExists()
+    public async Task ScanAsync_ShouldNotReportSpfOrDmarc_WhenRecordsExist()
     {
         var scanner = new DnsSecurityScanner(
         new StubDnsClient(_ => Task.FromResult(

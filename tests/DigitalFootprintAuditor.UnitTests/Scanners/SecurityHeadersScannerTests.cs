@@ -81,6 +81,9 @@ public class SecurityHeadersScannerTests
         Assert.Equal(
             0,
             findingList[0].ScoreImpact);
+        Assert.Contains(
+            "risk puanını artıran bir eksiklik tespit edilmedi",
+            findingList[0].Description);
     }
     
     //
@@ -251,6 +254,9 @@ public class SecurityHeadersScannerTests
         Assert.Equal(
             5,
             finding.ScoreImpact);
+        Assert.Contains(
+            "5 puan",
+            finding.Description);
     }
 
     // Yalnızca CSP eksik
@@ -304,6 +310,10 @@ public class SecurityHeadersScannerTests
         Assert.Equal(
             5,
             finding.ScoreImpact);
+
+        Assert.Contains(
+            "5 puan",
+            finding.Description);
     }
 
     // Timeout testi

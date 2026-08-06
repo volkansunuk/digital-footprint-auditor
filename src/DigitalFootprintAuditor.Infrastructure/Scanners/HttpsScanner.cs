@@ -31,7 +31,7 @@ public sealed class HttpsScanner : IScanner
         if (!SupportedTargetTypes.Contains(target.TargetType))
         {
             throw new ArgumentException(
-                "HttpScanner yalnızca Domain veya Website hedeflerini işler.",
+                "HttpsScanner yalnızca Domain veya Website hedeflerini işler.",
                 nameof(target));
         }
 
@@ -49,7 +49,10 @@ public sealed class HttpsScanner : IScanner
                     target.ScanId,
                     title: "HTTPS kullanılmıyor",
                     description:
-                        "Web sitesi güvenli HTTPS bağlantısı kullanmıyor.",
+                        "Web sitesi güvenli HTTPS bağlantısı kullanmıyor. " +
+                        "Bu durumda kullanıcı ile sunucu arasındaki veri trafiği şifrelenmeden iletilebilir " +
+                        "ve üçüncü kişiler tarafından okunabilir veya değiştirilebilir. " +
+                        "Bu bulgu toplam risk puanına 30 puan ekler.",
                     severity: FindingSeverity.High,
                     scoreImpact: 30));
             }
@@ -60,7 +63,9 @@ public sealed class HttpsScanner : IScanner
                     target.ScanId,
                     title: "HTTP adresi HTTPS'e yönlenmiyor",
                     description:
-                        "Web sitesinin HTTP adresi otomatik olarak HTTPS adresine yönlenmiyor.",
+                        "Web sitesinin HTTP adresi otomatik olarak HTTPS adresine yönlenmiyor. " +
+                        "Kullanıcılar siteye HTTP üzerinden eriştiğinde güvenli bağlantı kullanmadan devam edebilir. " +
+                        "Bu bulgu toplam risk puanına 10 puan ekler.",
                     severity: FindingSeverity.Medium,
                     scoreImpact: 10));
             }
@@ -71,7 +76,8 @@ public sealed class HttpsScanner : IScanner
                     target.ScanId,
                     title: "HTTPS yapılandırması uygun",
                     description:
-                        "Web sitesi HTTPS kullanıyor ve HTTP isteklerini HTTPS'e yönlendiriyor.",
+                        "Web sitesi HTTPS kullanıyor ve HTTP isteklerini HTTPS'e yönlendiriyor. " +
+                        "HTTPS kontrolünde risk puanını artıran bir eksiklik tespit edilmedi.",
                     severity: FindingSeverity.Info,
                     scoreImpact: 0));
             }

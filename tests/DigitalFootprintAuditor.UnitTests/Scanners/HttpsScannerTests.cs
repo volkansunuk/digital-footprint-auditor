@@ -73,6 +73,9 @@ public class HttpsScannerTests
         Assert.Equal(
             0,
             findingList[0].ScoreImpact);
+        Assert.Contains(
+            "risk puanını artıran bir eksiklik tespit edilmedi",
+            findingList[0].Description);
     }
 
     //http yok yönlendirme yok testi
@@ -108,18 +111,39 @@ public class HttpsScannerTests
         // Assert
         Assert.Equal(2, findings.Count);
 
-        Assert.Contains(
+        var httpsFinding = Assert.Single(
             findings,
             finding =>
-                finding.Title == "HTTPS kullanılmıyor" &&
-                finding.Severity == FindingSeverity.High &&
-                finding.ScoreImpact == 30);
+                finding.Title == "HTTPS kullanılmıyor");
+
+        var redirectFinding = Assert.Single(
+            findings,
+            finding =>
+                finding.Title == "HTTP adresi HTTPS'e yönlenmiyor");
+
+        Assert.Equal(
+            FindingSeverity.High,
+            httpsFinding.Severity);
+
+        Assert.Equal(
+            30,
+            httpsFinding.ScoreImpact);
 
         Assert.Contains(
-            findings,
-            finding =>
-                finding.Title == "HTTP adresi HTTPS'e yönlenmiyor" &&
-                finding.Severity == FindingSeverity.Medium);
+            "30 puan",
+            httpsFinding.Description);
+
+        Assert.Equal(
+            FindingSeverity.Medium,
+            redirectFinding.Severity);
+
+        Assert.Equal(
+            10,
+            redirectFinding.ScoreImpact);
+
+        Assert.Contains(
+            "10 puan",
+            redirectFinding.Description);
     }
 
     //http var yönlendirme yok testi
@@ -165,6 +189,9 @@ public class HttpsScannerTests
         Assert.Equal(
             10,
             findingList[0].ScoreImpact);
+        Assert.Contains(
+            "10 puan",
+            findingList[0].Description);
     }
 
     //timeout testi
@@ -245,8 +272,8 @@ public class HttpsScannerTests
 
     //kullanıcı iptali testi
     [Fact]
-public async Task ScanAsync_ShouldPropagateCancellation_WhenCallerCancelsRequest()
-{
+    public async Task ScanAsync_ShouldPropagateCancellation_WhenCallerCancelsRequest()
+    {
        // Arrange
         var websiteSecurityClient = new StubWebsiteSecurityClient(
             (_, cancellationToken) =>

@@ -1,6 +1,5 @@
 using DigitalFootprintAuditor.Application.Abstractions;
 using DigitalFootprintAuditor.Application.Dtos;
-using DigitalFootprintAuditor.Application.Services;
 using DigitalFootprintAuditor.Domain.Entities;
 using DigitalFootprintAuditor.Domain.Enums;
 using DigitalFootprintAuditor.Infrastructure.Persistence;
@@ -12,16 +11,16 @@ public class ScanService : IScanService
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly IReadOnlyCollection<IScanner> _scanners;
-    private readonly RiskScoringService _riskScoringService;
+    private readonly IRiskCalculator _riskCalculator;
 
     public ScanService(
         ApplicationDbContext dbContext,
         IEnumerable<IScanner> scanners,
-        RiskScoringService riskScoringService)
+        IRiskCalculator riskCalculator)
     {
         _dbContext = dbContext;
         _scanners = scanners.ToList();
-        _riskScoringService = riskScoringService;
+        _riskCalculator = riskCalculator;
     }
 
     public async Task<ScanResponseDto> CreateScanAsync(
@@ -97,10 +96,10 @@ public class ScanService : IScanService
         }
 
         scan.RiskScore =
-            _riskScoringService.CalculateScore(allFindings);
+            _riskCalculator.CalculateScore(allFindings);
 
         scan.RiskLevel =
-            _riskScoringService.CalculateRiskLevel(
+            _riskCalculator.CalculateRiskLevel(
                 scan.RiskScore);
 
         scan.Status = hasScannerFailure
@@ -148,8 +147,8 @@ public class ScanService : IScanService
                 target.TargetValue))
             .ToListAsync(cancellationToken);
 
-        scan.RiskScore = _riskScoringService.CalculateScore(scan.Findings);
-        scan.RiskLevel = _riskScoringService.CalculateRiskLevel(scan.RiskScore);
+        scan.RiskScore = _riskCalculator.CalculateScore(scan.Findings);
+        scan.RiskLevel = _riskCalculator.CalculateRiskLevel(scan.RiskScore);
 
         return new ScanResponseDto(
             scan.Id,
@@ -191,8 +190,8 @@ public class ScanService : IScanService
                         target.TargetValue))
                     .ToList();
 
-                scan.RiskScore = _riskScoringService.CalculateScore(scan.Findings);
-                scan.RiskLevel = _riskScoringService.CalculateRiskLevel(scan.RiskScore);
+                scan.RiskScore = _riskCalculator.CalculateScore(scan.Findings);
+                scan.RiskLevel = _riskCalculator.CalculateRiskLevel(scan.RiskScore);
 
                 return new ScanResponseDto(
                     scan.Id,

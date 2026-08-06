@@ -47,7 +47,8 @@ public sealed class GitHubProfileScanner : IScanner
                     target.ScanId,
                     title: "GitHub Profili Bulunamadı",
                     description:
-                        $"'{target.TargetValue}' kullanıcı adına ait herkese açık bir GitHub profili bulunamadı.",
+                            $"'{target.TargetValue}' kullanıcı adına ait herkese açık bir GitHub profili bulunamadı. " +
+                            "Bu sonuç bilgi amaçlıdır ve risk puanını artırmaz.",
                     severity: FindingSeverity.Info,
                     scoreImpact: 0));
 
@@ -58,8 +59,9 @@ public sealed class GitHubProfileScanner : IScanner
                 target.ScanId,
                 title: "GitHub Profili Tespit Edildi",
                 description:
-                    $"'{profile.Login}' kullanıcı adlı GitHub profili bulundu. " +
-                    $"Public repository sayısı: {profile.PublicRepos}.",
+                        $"'{profile.Login}' kullanıcı adlı herkese açık GitHub profili bulundu. " +
+                        $"Profilde {profile.PublicRepos} adet herkese açık repository bilgisi görüntülenmektedir. " +
+                        "Bu bulgu bilgi amaçlıdır ve risk puanını artırmaz.",
                 severity: FindingSeverity.Info,
                 scoreImpact: 0));
 
@@ -70,7 +72,8 @@ public sealed class GitHubProfileScanner : IScanner
                     title: "Herkese Açık E-Posta Adresi Bulundu",
                     description:
                         "GitHub profilinde herkese açık bir e-posta adresi bulunuyor. " +
-                        "Bu, kişisel bilgilerin daha kolay erişilebilir hale gelmesi nedeniyle risk oluşturan bir bulgudur.",
+                        "Bu bilgi; kimlik eşleştirme, istenmeyen iletişim ve sosyal mühendislik girişimleri için kullanılabilir. " +
+                        "Bu bulgu toplam risk puanına 10 puan ekler.",
                     severity: FindingSeverity.Medium,
                     scoreImpact: 10));
             }
@@ -81,7 +84,8 @@ public sealed class GitHubProfileScanner : IScanner
                     target.ScanId,
                     title: "GitHub Profil Biyografisi Mevcut",
                     description:
-                        "GitHub profilinde herkese açık bir biyografi bilgisi bulunuyor.",
+                            "GitHub profilinde herkese açık bir biyografi bilgisi bulunuyor. " +
+                            "Bu bilgi kullanıcı hakkında ek bağlam sağlayabilir ancak mevcut eğitim modelinde risk puanını artırmaz.",
                     severity: FindingSeverity.Info,
                     scoreImpact: 0));
             }
@@ -90,8 +94,9 @@ public sealed class GitHubProfileScanner : IScanner
                 target.ScanId,
                 title: "GitHub Hesap Bilgileri",
                 description:
-                    $"Hesap oluşturulma tarihi: {profile.CreatedAt:yyyy-MM-dd}. " +
-                    $"Son güncelleme tarihi: {profile.UpdatedAt:yyyy-MM-dd}.",
+                        $"Hesap oluşturulma tarihi: {profile.CreatedAt:yyyy-MM-dd}. " +
+                        $"Son güncelleme tarihi: {profile.UpdatedAt:yyyy-MM-dd}. " +
+                        "Bu bilgiler dijital ayak izinin süresi ve güncelliği hakkında bilgi verir; risk puanını artırmaz.",
                 severity: FindingSeverity.Info,
                 scoreImpact: 0));
         }
@@ -128,6 +133,7 @@ public sealed class GitHubProfileScanner : IScanner
     {
         return new ScanFinding
         {
+            Id = Guid.NewGuid(),
             ScanId = scanId,
             ScannerName = nameof(GitHubProfileScanner),
             Title = title,

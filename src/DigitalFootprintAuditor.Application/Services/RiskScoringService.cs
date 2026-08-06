@@ -1,13 +1,22 @@
 using DigitalFootprintAuditor.Domain.Entities;
 using DigitalFootprintAuditor.Domain.Enums;
+using DigitalFootprintAuditor.Application.Abstractions;
 
 namespace DigitalFootprintAuditor.Application.Services;
 
-public class RiskScoringService
+public class RiskScoringService : IRiskCalculator
 {
-    public int CalculateScore(IEnumerable<ScanFinding> findings)
+    public int CalculateScore(
+        IEnumerable<ScanFinding> findings)
     {
-        return findings.Sum(finding => finding.ScoreImpact);
+        ArgumentNullException.ThrowIfNull(findings);
+
+        var totalScore = findings.Sum(
+            finding => Math.Max(
+                0,
+                finding.ScoreImpact));
+
+        return Math.Min(totalScore, 100);
     }
 
     public RiskLevel CalculateRiskLevel(int score)

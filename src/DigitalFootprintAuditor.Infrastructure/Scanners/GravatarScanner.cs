@@ -16,7 +16,7 @@ public sealed class GravatarScanner : IScanner
 
     //***
     public IReadOnlyCollection<TargetType> SupportedTargetTypes =>
-        new[] { TargetType.Email};
+        new[] { TargetType.Email };
 
     public async Task<IReadOnlyCollection<ScanFinding>> ScanAsync(
         ScanTarget target,
@@ -48,7 +48,8 @@ public sealed class GravatarScanner : IScanner
                 findings.Add(CreateFinding(
                     target.ScanId,
                     "Gravatar Profili Bulunamadı",
-                    "Bu e-posta hash'i için herkese açık bir Gravatar profili bulunamadı.",
+                    "Bu e-posta adresinin hash değeriyle eşleşen herkese açık bir Gravatar profili bulunamadı. " +
+                    "Bu sonuç bilgi amaçlıdır ve risk puanını artırmaz.",
                     FindingSeverity.Info,
                     0));
 
@@ -58,10 +59,11 @@ public sealed class GravatarScanner : IScanner
             findings.Add(CreateFinding(
                 target.ScanId,
                 "Gravatar Profili Bulundu",
-                "Bu e-posta hash'i ile eşleşen herkese açık bir Gravatar profili bulundu. " +
-                "Bu bulgu, görünür bir dijital kimlik izinin olduğunu gösterir ve risk puanlamasında dikkate alınır.",
+                "Bu e-posta adresinin hash değeriyle eşleşen herkese açık bir Gravatar profili bulundu. " +
+                "Bu bulgu, e-posta adresiyle bağlantılı görünür bir dijital kimlik izi bulunduğunu gösterir. " +
+                "Mevcut eğitim modelinde bu bulgu risk puanını artırmaz.",
                 FindingSeverity.Info,
-                5));
+                0));
 
             return findings;
         }
@@ -98,6 +100,7 @@ public sealed class GravatarScanner : IScanner
     {
         return new ScanFinding
         {
+            Id = Guid.NewGuid(),
             ScanId = scanId,
             ScannerName = nameof(GravatarScanner),
             Title = title,

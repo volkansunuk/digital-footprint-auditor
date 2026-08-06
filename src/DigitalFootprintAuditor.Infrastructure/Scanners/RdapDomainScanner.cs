@@ -9,19 +9,19 @@ public sealed class RdapDomainScanner : IScanner
 {
     private readonly IRdapClient _rdapClient;
 
-    public  RdapDomainScanner(IRdapClient rdapClient)
+    public RdapDomainScanner(IRdapClient rdapClient)
     {
         _rdapClient = rdapClient;
     }
 
     public IReadOnlyCollection<TargetType> SupportedTargetTypes =>
-        new[] { TargetType.Domain};
+        new[] { TargetType.Domain };
 
     public async Task<IReadOnlyCollection<ScanFinding>> ScanAsync(
         ScanTarget target, 
         CancellationToken cancellationToken)
     {
-        if(target is null)
+        if (target is null)
         {
             throw new ArgumentNullException(nameof(target));
         }
@@ -62,7 +62,8 @@ public sealed class RdapDomainScanner : IScanner
                 findings.Add(CreateFinding(
                     target.ScanId,
                     "Domain Kaydı Bulunamadı",
-                    $"{normalizedDomain} için RDAP kaydı bulunamadı.",
+                    $"{normalizedDomain} için RDAP kaydı bulunamadı. " +
+                    "Bu sonuç bilgi amaçlıdır ve risk puanını artırmaz.",
                     FindingSeverity.Info,
                     0));
 
@@ -79,9 +80,11 @@ public sealed class RdapDomainScanner : IScanner
             findings.Add(CreateFinding(
                 target.ScanId,
                 "Domain RDAP Kaydı Bulundu",
-                description + " Bu bulgu, domainin kayıt bilgileriyle birlikte görünür olduğunu gösterir ve risk değerlendirmesinde bir sinyal olarak dikkate alınır.",
+                description +
+                    " Bu bilgiler domainin kayıt durumu hakkında bilgi verir. " +
+                    "Bu sonuç bilgi amaçlıdır ve risk puanını artırmaz.",
                 FindingSeverity.Info,
-                3));
+                0));
 
             return findings;
         }
@@ -182,6 +185,7 @@ public sealed class RdapDomainScanner : IScanner
     {
         return new ScanFinding
         {
+            Id = Guid.NewGuid(),
             ScanId = scanId,
             ScannerName = nameof(RdapDomainScanner),
             Title = title,

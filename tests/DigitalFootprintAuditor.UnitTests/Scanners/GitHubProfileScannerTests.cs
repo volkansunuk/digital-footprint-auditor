@@ -5,7 +5,7 @@ using DigitalFootprintAuditor.Infrastructure.GitHub;
 using DigitalFootprintAuditor.Infrastructure.Scanners;
 using Moq;
 using Moq.Protected;
-using Xunit;
+
 
 namespace DigitalFootprintAuditor.UnitTests.Scanners;
 
@@ -62,10 +62,43 @@ public class GitHubProfileScannerTests
 
         var findings = await scanner.ScanAsync(target, CancellationToken.None);
 
+        // Assert
         Assert.NotEmpty(findings);
         Assert.True(findings.Count >= 2);
-        Assert.Contains(findings, finding => finding.Title.Contains("E-Posta"));
-        Assert.All(findings, finding => Assert.Equal(target.ScanId, finding.ScanId));
+
+        var emailFinding = Assert.Single(
+            findings, 
+            finding =>
+                finding.Title ==
+                "Herkese Açık E-Posta Adresi Bulundu");
+
+        Assert.Equal(
+            FindingSeverity.Medium,
+            emailFinding.Severity);
+
+        Assert.Equal(
+            10,
+            emailFinding.ScoreImpact);
+
+        Assert.Contains(
+            "10 puan",
+            emailFinding.Description);
+
+        Assert.All(
+            findings,
+            finding =>
+                Assert.Equal(
+                    target.ScanId,
+                    finding.ScanId));
+
+        Assert.All(
+            findings.Where(finding =>
+                finding.Title !=
+                "Herkese Açık E-Posta Adresi Bulundu"),
+            finding =>
+                Assert.Equal(
+                    0,
+                    finding.ScoreImpact));
     }
 
     [Fact]

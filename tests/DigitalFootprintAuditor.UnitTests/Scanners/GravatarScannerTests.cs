@@ -35,6 +35,8 @@ public class GravatarScannerTests
         Assert.Equal("Gravatar Profili Bulundu", finding.Title);
         Assert.Equal(FindingSeverity.Info, finding.Severity);
         Assert.Equal(nameof(GravatarScanner), finding.ScannerName);
+        Assert.Equal(0, finding.ScoreImpact);
+        Assert.Contains("risk puanını artırmaz", finding.Description);
     }
 
     [Fact]
@@ -59,6 +61,8 @@ public class GravatarScannerTests
 
         Assert.Equal("Gravatar Profili Bulunamadı", finding.Title);
         Assert.Equal(FindingSeverity.Info, finding.Severity);
+        Assert.Equal(0, finding.ScoreImpact);
+        Assert.Contains("risk puanını artırmaz", finding.Description);
     }
 
     [Fact]

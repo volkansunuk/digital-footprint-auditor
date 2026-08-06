@@ -83,7 +83,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // [x] IScanService istendiğinde ScanService kullanılacak.
 // [x] application servisleri burada 
 builder.Services.AddScoped<IScanService, ScanService>();
-builder.Services.AddScoped<RiskScoringService>();
+builder.Services.AddScoped<IRiskCalculator, RiskScoringService>();
 builder.Services.AddScoped<IValidator<CreateScanRequestDto>, CreateScanRequestValidator>();
 builder.Services.AddScoped<IValidator<ScanTargetInputDto>, ScanTargetInputValidator>();
 

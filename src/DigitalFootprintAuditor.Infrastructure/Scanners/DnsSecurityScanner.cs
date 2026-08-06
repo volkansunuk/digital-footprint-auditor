@@ -84,7 +84,9 @@ public sealed class DnsSecurityScanner : IScanner
                     target.ScanId,
                     title: "SPF kaydı bulunamadı",
                     description:
-                        "Domain için SPF kaydı bulunamadı. SPF, hangi sunucuların bu domain adına e-posta gönderebileceğini belirtir ve e-posta sahteciliğini azaltmaya yardımcı olur.",
+                        "Domain için SPF kaydı bulunamadı. SPF, hangi sunucuların bu domain adına " +
+                        "e-posta gönderebileceğini belirtir ve e-posta sahteciliğini azaltmaya yardımcı olur. " +
+                        "Bu bulgu toplam risk puanına 10 puan ekler.",
                     severity: FindingSeverity.Low,
                     scoreImpact: 10));
             }
@@ -100,7 +102,10 @@ public sealed class DnsSecurityScanner : IScanner
                     target.ScanId,
                     title: "DMARC kaydı bulunamadı",
                     description:
-                        "Domain için DMARC kaydı bulunamadı. DMARC, SPF ve DKIM kontrolleri başarısız olduğunda e-postaların nasıl işleneceğini belirleyerek e-posta sahteciliğine karşı koruma sağlamaya yardımcı olur.",
+                        "Domain için DMARC kaydı bulunamadı. DMARC, SPF ve DKIM kontrolleri " +
+                        "başarısız olduğunda e-postaların nasıl işleneceğini belirler ve sahte " +
+                        "e-postalara karşı koruma sağlamaya yardımcı olur. " +
+                        "Bu bulgu toplam risk puanına 15 puan ekler.",
                     severity: FindingSeverity.Medium,
                     scoreImpact: 15));
             }
@@ -111,7 +116,8 @@ public sealed class DnsSecurityScanner : IScanner
                     target.ScanId,
                     title: "DNS güvenlik kayıtları bulundu",
                     description:
-                        "Domain için temel DNS kayıtları ile SPF ve DMARC kayıtları bulundu.",
+                        "Domain için A, AAAA, MX, SPF ve DMARC kayıtları bulundu. " +
+                        "DNS güvenlik kontrollerinde puan artıran bir eksiklik tespit edilmedi.",
                     severity: FindingSeverity.Info,
                     scoreImpact: 0));
             }
