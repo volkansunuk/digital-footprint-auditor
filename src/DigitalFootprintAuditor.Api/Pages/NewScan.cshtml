@@ -19,12 +19,16 @@
 
 <section class="form-card">
     <form method="post">
+
+        <div asp-validation-summary="ModelOnly"
+            class="validation-summary">
+        </div>
+
         <div class="form-group">
-            <label for="email">E-posta</label>
+            <label asp-for="Email">E-posta</label>
 
             <input
-                id="email"
-                name="email"
+                asp-for="Email"
                 type="email"
                 placeholder="ornek@example.com" />
 
@@ -34,56 +38,51 @@
         </div>
 
         <div class="form-group">
-            <label for="githubUsername">
+            <label asp-for="GitHubUsername">
                 GitHub Kullanıcı Adı
             </label>
 
             <input
-                id="githubUsername"
-                name="githubUsername"
+                asp-for="GitHubUsername"
                 type="text"
                 placeholder="octocat" />
 
             <small>
-                Açık GitHub profil ve repository kontrolleri yapılır.
+                Açık profil ve public repository kontrolleri yapılır.
             </small>
         </div>
 
         <div class="form-group">
-            <label for="domain">Domain</label>
+            <label asp-for="Domain">Domain</label>
 
             <input
-                id="domain"
-                name="domain"
+                asp-for="Domain"
                 type="text"
                 placeholder="example.com" />
 
             <small>
-                RDAP, DNS ve domain güvenlik kontrolleri için kullanılır.
+                RDAP ve DNS kontrolleri yapılır.
             </small>
         </div>
 
         <div class="form-group">
-            <label for="website">Web Sitesi</label>
+            <label asp-for="Website">Web Sitesi</label>
 
             <input
-                id="website"
-                name="website"
+                asp-for="Website"
                 type="url"
                 placeholder="https://example.com" />
 
             <small>
-                HTTPS ve HTTP güvenlik başlıkları kontrol edilir.
+                HTTPS ve güvenlik başlıkları kontrol edilir.
             </small>
         </div>
 
-        <div class="form-notice">
-            Bu araç yalnızca size ait veya yönetmeye yetkili olduğunuz
-            dijital varlıklar üzerinde kullanılmalıdır.
-        </div>
-
-        <button class="button button-primary" type="submit">
+        <button
+            class="button button-primary"
+            type="submit">
             Taramayı Başlat
         </button>
+
     </form>
 </section>

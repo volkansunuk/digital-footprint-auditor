@@ -1,0 +1,178 @@
+@page
+@model DigitalFootprintAuditor.Api.Pages.ScanDetailModel
+
+@{
+    ViewData["Title"] = "Tarama Detayı";
+}
+
+<section class="page-header">
+    <span class="eyebrow">Tarama Sonucu</span>
+
+    <h1>Tarama Detayı</h1>
+
+    <p>
+        Taramanın genel risk durumu ve scanner bulguları aşağıda
+        görüntülenmektedir.
+    </p>
+</section>
+
+@if (Model.Scan is not null)
+{
+    <section class="summary-grid">
+        <article class="summary-card">
+            <span>Risk Puanı</span>
+            <strong>@Model.Scan.RiskScore / 100</strong>
+        </article>
+
+        <article class="summary-card">
+            <span>Risk Seviyesi</span>
+            <strong>@Model.Scan.RiskLevel</strong>
+        </article>
+
+        <article class="summary-card">
+            <span>Durum</span>
+            <strong>@Model.Scan.Status</strong>
+        </article>
+
+        <article class="summary-card">
+            <span>Bulgu Sayısı</span>
+            <strong>@Model.Scan.Findings.Count</strong>
+        </article>
+    </section>
+
+    <section class="section">
+        <div class="section-heading">
+            <span class="eyebrow">Hedefler</span>
+            <h2>Taranan Varlıklar</h2>
+        </div>
+
+        <div class="target-list">
+            @foreach (var target in Model.Scan.Targets)
+            {
+                <div class="target-item">
+                    <strong>@target.TargetType</strong>
+                    <span>@target.TargetValue</span>
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="section-heading">
+            <span class="eyebrow">Scanner Durumları</span>
+            <h2>Tamamlanan ve Başarısız Scanner'lar</h2>
+        </div>
+
+        @if (Model.Scan.ScannerStatuses.Count == 0)
+        {
+            <div class="empty-state">
+                Scanner durumu bulunamadı.
+            </div>
+        }
+        else
+        {
+            <div class="scanner-status-list">
+                @foreach (var scannerStatus in Model.Scan.ScannerStatuses)
+                {
+                    <div class="scanner-status-item">
+                        <strong>@scannerStatus.ScannerName</strong>
+
+                        @if (scannerStatus.IsSuccessful)
+                        {
+                            <span class="status-badge status-success">
+                                Completed
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="status-badge status-failed">
+                                Failed
+                            </span>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="section">
+        <div class="section-heading">
+            <span class="eyebrow">Bulgular</span>
+            <h2>Scanner Sonuçları</h2>
+        </div>
+
+        @if (Model.Scan.Findings.Count == 0)
+        {
+            <div class="empty-state">
+                Bu taramada herhangi bir bulgu üretilmedi.
+            </div>
+        }
+        else
+        {
+            <div class="findings-list">
+                @foreach (var finding in Model.Scan.Findings)
+                {
+                    <article class="finding-card">
+                        <div class="finding-header">
+                            <div>
+                                <span class="scanner-name">
+                                    @finding.ScannerName
+                                </span>
+
+                                <h3>@finding.Title</h3>
+                            </div>
+
+                            <span class="severity-badge">
+                                @finding.Severity
+                            </span>
+                        </div>
+
+                        <p>
+                            @finding.Description
+                        </p>
+
+                        <div class="recommendation">
+                            <strong>Önerilen Aksiyon</strong>
+                            <p>@finding.Recommendation</p>
+                        </div>
+
+                        <div class="finding-meta">
+                            <span>
+                                Risk katkısı:
+                                <strong>+@finding.ScoreImpact</strong>
+                            </span>
+
+                            <span>
+                                Kaynak:
+                                <strong>@finding.Source</strong>
+                            </span>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+}
+else
+{
+    <div class="empty-state">
+        <h2>Görüntülenecek bir tarama seçilmedi.</h2>
+
+        <p>
+            Tarama detaylarını görmek için yeni bir tarama başlatabilir
+            veya tarama geçmişinden mevcut bir taramayı seçebilirsiniz.
+        </p>
+
+        <div class="hero-actions">
+            <a class="button button-primary"
+               asp-page="/NewScan">
+                Yeni Tarama Başlat
+            </a>
+
+            <a class="button button-secondary"
+               asp-page="/ScanHistory">
+                Tarama Geçmişine Git
+            </a>
+        </div>
+    </div>
+}

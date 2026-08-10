@@ -1,0 +1,87 @@
+@page
+@model DigitalFootprintAuditor.Api.Pages.ScanHistoryModel
+
+@{
+    ViewData["Title"] = "Tarama Geçmişi";
+}
+
+<section class="page-header">
+    <span class="eyebrow">Geçmiş</span>
+    <h1>Tarama Geçmişi</h1>
+
+    <p>
+        Daha önce gerçekleştirilen taramaları ve genel risk
+        durumlarını görüntüleyebilirsiniz.
+    </p>
+</section>
+
+@if (Model.Scans.Count == 0)
+{
+    <div class="empty-state">
+        <h2>Henüz bir tarama bulunmuyor.</h2>
+
+        <p>
+            İlk taramanızı başlatarak sonuçları burada
+            görüntüleyebilirsiniz.
+        </p>
+
+        <a class="button button-primary"
+           asp-page="/NewScan">
+            Yeni Tarama Başlat
+        </a>
+    </div>
+}
+else
+{
+    <section class="history-list">
+        @foreach (var scan in Model.Scans)
+        {
+            <article class="history-card">
+                <div class="history-main">
+                    <div>
+                        <span class="scanner-name">
+                            @scan.CreatedAt.ToString("dd.MM.yyyy HH:mm")
+                        </span>
+
+                        <h2>
+                            Risk Puanı: @scan.RiskScore / 100
+                        </h2>
+                    </div>
+
+                    <div class="history-badges">
+                        <span class="severity-badge">
+                            @scan.RiskLevel
+                        </span>
+
+                        <span class="severity-badge">
+                            @scan.Status
+                        </span>
+                    </div>
+                </div>
+
+                <div class="history-targets">
+                    @foreach (var target in scan.Targets)
+                    {
+                        <span>
+                            <strong>@target.TargetType:</strong>
+                            @target.TargetValue
+                        </span>
+                    }
+                </div>
+
+                <div class="history-footer">
+                    <span>
+                        Bulgu sayısı:
+                        <strong>@scan.Findings.Count</strong>
+                    </span>
+
+                    <a class="button button-secondary"
+                       asp-page="/ScanDetail"
+                       asp-route-id="@scan.Id">
+                        Detayı Gör
+                    </a>
+                </div>
+            </article>
+        }
+    </section>
+}

@@ -116,7 +116,8 @@ public class ScanService : IScanService
             request.Targets,
             allFindings
                 .Select(MapFindingToDto)
-                .ToList());
+                .ToList(),
+            BuildScannerStatuses(allFindings));
     }
 
     public async Task<ScanResponseDto?> GetScanByIdAsync(
@@ -154,7 +155,8 @@ public class ScanService : IScanService
             scanTargets,
             scan.Findings
                 .Select(MapFindingToDto)
-                .ToList());
+                .ToList(),
+            BuildScannerStatuses(scan.Findings));
     }
 
     public async Task<IReadOnlyCollection<ScanResponseDto>> GetAllScansAsync(
@@ -197,7 +199,8 @@ public class ScanService : IScanService
                     targetsForScan,
                     scan.Findings
                         .Select(MapFindingToDto)
-                        .ToList());
+                        .ToList(),
+                    BuildScannerStatuses(scan.Findings));
             })
             .ToList();
     }
@@ -232,7 +235,75 @@ public class ScanService : IScanService
             finding.Severity,
             finding.ScoreImpact,
             finding.Source,
-            finding.CreatedAt);
+            finding.CreatedAt,
+            GetRecommendation(finding));
+    }
+
+    private static string GetRecommendation(ScanFinding finding)
+    {
+        if (finding.Title.Contains(
+            "SPF",
+            StringComparison.OrdinalIgnoreCase))
+        {
+            return
+                "Domain için uygun bir SPF kaydı yapılandırmayı değerlendirin.";
+        }
+
+        if (finding.Title.Contains(
+            "DMARC",
+            StringComparison.OrdinalIgnoreCase))
+        {
+            return
+                "DMARC politikasını yapılandırarak e-posta sahteciliğine " +
+                "karşı korumayı güçlendirin.";
+        }
+
+        if (finding.Title.Contains(
+            "E-Posta",
+            StringComparison.OrdinalIgnoreCase))
+        {
+            return
+                "Herkese açık e-posta paylaşımının gerekli olup olmadığını " +
+                "değerlendirin.";
+        }
+
+        if (finding.Title.Contains(
+            "HTTPS",
+            StringComparison.OrdinalIgnoreCase))
+        {
+            return
+                "Web sitesinde HTTPS kullanımını etkinleştirmeyi ve " +
+                "HTTP trafiğini HTTPS'e yönlendirmeyi değerlendirin.";
+        }
+
+        if (finding.Title.Contains(
+            "HSTS",
+            StringComparison.OrdinalIgnoreCase))
+        {
+            return
+                "Strict-Transport-Security başlığını yapılandırmayı değerlendirin.";
+        }
+
+        if (finding.Title.Contains(
+            "Content-Security-Policy",
+            StringComparison.OrdinalIgnoreCase) ||
+            finding.Title.Contains(
+                "CSP",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return
+                "Uygun bir Content-Security-Policy başlığı yapılandırmayı değerlendirin.";
+        }
+
+        if (finding.ScoreImpact == 0)
+        {
+            return
+                "Bu bulgu bilgi amaçlıdır. Mevcut yapılandırmayı düzenli olarak " +
+                "gözden geçirmeye devam edin.";
+        }
+
+        return
+            "Bulguyu inceleyin ve ilgili güvenlik yapılandırmasını gözden geçirin.";
     }
 
     private async Task<ScannerExecutionResult> ExecuteScannerSafelyAsync(
@@ -264,6 +335,34 @@ public class ScanService : IScanService
                 new[] { failureFinding },
                 HasFailed: true);
         }
+    }
+
+    private static IReadOnlyCollection<ScannerStatusDto> BuildScannerStatuses(
+        IEnumerable<ScanFinding> findings)
+    {
+        var findingList = findings.ToList();
+
+        var scannerNames = findingList
+            .Select(finding => finding.ScannerName)
+            .Where(scannerName =>
+                !string.IsNullOrWhiteSpace(scannerName))
+            .Distinct()
+            .ToList();
+
+        return scannerNames
+            .Select(scannerName =>
+            {
+                var hasFailure = findingList.Any(finding =>
+                    finding.ScannerName == scannerName &&
+                    finding.Title.Contains(
+                        "çalıştırılamadı",
+                        StringComparison.OrdinalIgnoreCase));
+
+                return new ScannerStatusDto(
+                    scannerName,
+                    IsSuccessful: !hasFailure);
+            })
+            .ToList();
     }
 
     private static ScanFinding CreateScannerFailureFinding(

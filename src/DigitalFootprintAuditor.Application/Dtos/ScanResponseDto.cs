@@ -2,7 +2,6 @@ namespace DigitalFootprintAuditor.Application.Dtos;
 
 using DigitalFootprintAuditor.Domain.Enums;
 
-//tarama sonucu dönerken kullanacağımız ana Dto
 public record ScanResponseDto(
     Guid Id,
     DateTime CreatedAt,
@@ -11,5 +10,6 @@ public record ScanResponseDto(
     int RiskScore,
     RiskLevel RiskLevel,
     IReadOnlyCollection<ScanTargetInputDto> Targets,
-    IReadOnlyCollection<ScanFindingDto> Findings
+    IReadOnlyCollection<ScanFindingDto> Findings,
+    IReadOnlyCollection<ScannerStatusDto> ScannerStatuses
 );

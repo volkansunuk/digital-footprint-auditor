@@ -11,5 +11,6 @@ public record ScanFindingDto
     FindingSeverity Severity,
     int ScoreImpact,
     string Source,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    string Recommendation
 );
