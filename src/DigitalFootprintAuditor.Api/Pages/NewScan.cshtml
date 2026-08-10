@@ -1,0 +1,89 @@
+@page
+@model DigitalFootprintAuditor.Api.Pages.NewScanModel
+
+@{
+    ViewData["Title"] = "Yeni Tarama";
+}
+
+<section class="page-header">
+    <span class="eyebrow">Yeni Analiz</span>
+
+    <h1>Yeni Tarama Başlat</h1>
+
+    <p>
+        Alanların tamamını doldurmak zorunda değilsiniz.
+        Yalnızca size ait veya analiz etmeye yetkili olduğunuz
+        varlıkları giriniz.
+    </p>
+</section>
+
+<section class="form-card">
+    <form method="post">
+        <div class="form-group">
+            <label for="email">E-posta</label>
+
+            <input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="ornek@example.com" />
+
+            <small>
+                Gravatar ve e-posta odaklı kontroller için kullanılır.
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="githubUsername">
+                GitHub Kullanıcı Adı
+            </label>
+
+            <input
+                id="githubUsername"
+                name="githubUsername"
+                type="text"
+                placeholder="octocat" />
+
+            <small>
+                Açık GitHub profil ve repository kontrolleri yapılır.
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="domain">Domain</label>
+
+            <input
+                id="domain"
+                name="domain"
+                type="text"
+                placeholder="example.com" />
+
+            <small>
+                RDAP, DNS ve domain güvenlik kontrolleri için kullanılır.
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="website">Web Sitesi</label>
+
+            <input
+                id="website"
+                name="website"
+                type="url"
+                placeholder="https://example.com" />
+
+            <small>
+                HTTPS ve HTTP güvenlik başlıkları kontrol edilir.
+            </small>
+        </div>
+
+        <div class="form-notice">
+            Bu araç yalnızca size ait veya yönetmeye yetkili olduğunuz
+            dijital varlıklar üzerinde kullanılmalıdır.
+        </div>
+
+        <button class="button button-primary" type="submit">
+            Taramayı Başlat
+        </button>
+    </form>
+</section>

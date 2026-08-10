@@ -120,6 +120,8 @@ builder.Services.AddControllers()
             new JsonStringEnumConverter());
     });
 
+builder.Services.AddRazorPages();
+
 builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
@@ -137,9 +139,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 
 // Uygulamanın ayakta olduğunu doğrulayan basit kök endpoint.
-app.MapGet("/", () => Results.Ok(new
+app.MapGet("/api/health", () => Results.Ok(new
 {
     name = "Digital Footprint Auditor",
     status = "Running"
@@ -150,5 +153,7 @@ app.MapGet("/", () => Results.Ok(new
 // [x] MapControllers çağrısı controller endpointlerini routing sistemine ekliyor.
 // [ ] Yeni controller eklendiğinde ayrıca MapControllers çağrısı eklemek gerekmez.
 app.MapControllers();
+
+app.MapRazorPages();
 
 app.Run();
