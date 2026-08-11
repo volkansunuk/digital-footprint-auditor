@@ -75,12 +75,16 @@ public class NewScanModel : PageModel
 
         var request = new CreateScanRequestDto(targets);
 
-        var result = await _scanService.CreateScanAsync(
+        var scanId = await _scanService.PrepareScanAsync(
             request,
             cancellationToken);
 
         return RedirectToPage(
             "/ScanDetail",
-            new { id = result.Id });
+            new
+            {
+                id = scanId,
+                start = true
+            });
     }
 }

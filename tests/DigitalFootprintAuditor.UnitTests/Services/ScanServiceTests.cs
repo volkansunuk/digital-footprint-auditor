@@ -1,6 +1,7 @@
 using DigitalFootprintAuditor.Application.Abstractions;
 using DigitalFootprintAuditor.Application.Services;
 using DigitalFootprintAuditor.Application.Dtos;
+using DigitalFootprintAuditor.Application.Realtime;
 using DigitalFootprintAuditor.Domain.Entities;
 using DigitalFootprintAuditor.Domain.Enums;
 using DigitalFootprintAuditor.Infrastructure.Persistence;
@@ -53,6 +54,20 @@ public class ScanServiceTests
             }
     }
 
+    private sealed class StubProgressNotifier : IScanProgressNotifier
+{
+    public List<ScannerProgressDto> Notifications { get; } = new();
+
+    public Task NotifyAsync(
+        ScannerProgressDto progress,
+        CancellationToken cancellationToken)
+    {
+        Notifications.Add(progress);
+
+        return Task.CompletedTask;
+    }
+}
+
     [Fact]
     public async Task CreateScanAsync_ShouldCombineFindings_FromMatchingScanners()
     {
@@ -103,7 +118,8 @@ public class ScanServiceTests
                     firstScanner,
                     secondScanner
                 },
-                new RiskScoringService());
+                new RiskScoringService(),
+                new StubProgressNotifier());
 
             var request = new CreateScanRequestDto(
                 new[]
@@ -197,7 +213,8 @@ public class ScanServiceTests
                 firstScanner,
                 secondScanner
             },
-            new RiskScoringService());
+            new RiskScoringService(),
+            new StubProgressNotifier());
 
         var request = new CreateScanRequestDto(
             new[]
@@ -289,7 +306,8 @@ public class ScanServiceTests
                 failingScanner,
                 successfulScannerTwo
             },
-            new RiskScoringService());
+            new RiskScoringService(),
+            new StubProgressNotifier());
 
         var request = new CreateScanRequestDto(
             new[]
@@ -380,7 +398,8 @@ public class ScanServiceTests
                 websiteScanner,
                 domainScanner
             },
-            new RiskScoringService());
+            new RiskScoringService(),
+            new StubProgressNotifier());
 
         var request = new CreateScanRequestDto(
             new[]
@@ -410,4 +429,217 @@ public class ScanServiceTests
             result.Status);
     }
 
+    [Fact]
+    public async Task CreateScanAsync_ShouldMapRecommendationToFindingDto()
+    {
+        await using var dbContext = CreateDbContext();
+
+        var scanner = new StubScanner(
+            TargetType.Domain,
+            (target, _) =>
+                Task.FromResult<IReadOnlyCollection<ScanFinding>>(
+                    new[]
+                    {
+                        new ScanFinding
+                        {
+                            Id = Guid.NewGuid(),
+                            ScanId = target.ScanId,
+                            ScannerName = "DnsSecurityScanner",
+                            Title = "DMARC kaydı bulunamadı",
+                            Description = "Domain için DMARC kaydı bulunamadı.",
+                            Severity = FindingSeverity.Medium,
+                            ScoreImpact = 15,
+                            Source = "DNS",
+                            CreatedAt = DateTime.UtcNow
+                        }
+                    }));
+
+        var service = new ScanService(
+            dbContext,
+            new IScanner[] { scanner },
+            new RiskScoringService(),
+            new StubProgressNotifier());
+
+        var request = new CreateScanRequestDto(
+            new[]
+            {
+                new ScanTargetInputDto(
+                    TargetType.Domain,
+                    "example.com")
+            });
+
+        var result = await service.CreateScanAsync(
+            request,
+            CancellationToken.None);
+
+        var finding = Assert.Single(result.Findings);
+
+        Assert.False(
+            string.IsNullOrWhiteSpace(finding.Recommendation));
+
+        Assert.Contains(
+            "DMARC",
+            finding.Recommendation,
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CreateScanAsync_ShouldReturnScannerStatuses_ForSuccessfulAndFailedScanners()
+    {
+        await using var dbContext = CreateDbContext();
+
+        var successfulScanner = new StubScanner(
+            TargetType.Domain,
+            (target, _) =>
+                Task.FromResult<IReadOnlyCollection<ScanFinding>>(
+                    new[]
+                    {
+                        new ScanFinding
+                        {
+                            Id = Guid.NewGuid(),
+                            ScanId = target.ScanId,
+                            ScannerName = "SuccessfulScanner",
+                            Title = "Başarılı bulgu",
+                            Description = "Scanner başarıyla çalıştı.",
+                            Severity = FindingSeverity.Info,
+                            ScoreImpact = 0,
+                            Source = "Test",
+                            CreatedAt = DateTime.UtcNow
+                        }
+                    }));
+
+        var failingScanner = new StubScanner(
+            TargetType.Domain,
+            (_, _) => throw new InvalidOperationException(
+                "Test scanner hatası."));
+
+        var service = new ScanService(
+            dbContext,
+            new IScanner[]
+            {
+                successfulScanner,
+                failingScanner
+            },
+            new RiskScoringService(),
+            new StubProgressNotifier());
+
+        var request = new CreateScanRequestDto(
+            new[]
+            {
+                new ScanTargetInputDto(
+                    TargetType.Domain,
+                    "example.com")
+            });
+
+        var result = await service.CreateScanAsync(
+            request,
+            CancellationToken.None);
+
+        Assert.Contains(
+            result.ScannerStatuses,
+            status =>
+                status.ScannerName == "SuccessfulScanner" &&
+                status.IsSuccessful);
+
+        Assert.Contains(
+            result.ScannerStatuses,
+            status =>
+                status.ScannerName == nameof(StubScanner) &&
+                !status.IsSuccessful);
+
+        Assert.Equal(
+            ScanStatus.PartiallyCompleted,
+            result.Status);
+    }
+
+    [Fact]
+    public async Task CreateScanAsync_ShouldNotifyProgress_AsPendingRunningCompleted()
+    {
+        await using var dbContext = CreateDbContext();
+
+        var progressNotifier = new StubProgressNotifier();
+
+        var scanner = new StubScanner(
+            TargetType.Domain,
+            (target, _) =>
+                Task.FromResult<IReadOnlyCollection<ScanFinding>>(
+                    Array.Empty<ScanFinding>()));
+
+        var service = new ScanService(
+            dbContext,
+            new IScanner[] { scanner },
+            new RiskScoringService(),
+            progressNotifier);
+
+        var request = new CreateScanRequestDto(
+            new[]
+            {
+                new ScanTargetInputDto(
+                    TargetType.Domain,
+                    "example.com")
+            });
+
+        await service.CreateScanAsync(
+            request,
+            CancellationToken.None);
+
+        Assert.Equal(3, progressNotifier.Notifications.Count);
+
+        Assert.Equal(
+            ScannerProgressStatus.Pending,
+            progressNotifier.Notifications[0].Status);
+
+        Assert.Equal(
+            ScannerProgressStatus.Running,
+            progressNotifier.Notifications[1].Status);
+
+        Assert.Equal(
+            ScannerProgressStatus.Completed,
+            progressNotifier.Notifications[2].Status);
+    }
+
+    [Fact]
+    public async Task CreateScanAsync_ShouldNotifyProgress_AsPendingRunningFailed_WhenScannerFails()
+    {
+        await using var dbContext = CreateDbContext();
+
+        var progressNotifier = new StubProgressNotifier();
+
+        var scanner = new StubScanner(
+            TargetType.Domain,
+            (_, _) => throw new InvalidOperationException(
+                "Scanner test hatası."));
+
+        var service = new ScanService(
+            dbContext,
+            new IScanner[] { scanner },
+            new RiskScoringService(),
+            progressNotifier);
+
+        var request = new CreateScanRequestDto(
+            new[]
+            {
+                new ScanTargetInputDto(
+                    TargetType.Domain,
+                    "example.com")
+            });
+
+        await service.CreateScanAsync(
+            request,
+            CancellationToken.None);
+
+        Assert.Equal(3, progressNotifier.Notifications.Count);
+
+        Assert.Equal(
+            ScannerProgressStatus.Pending,
+            progressNotifier.Notifications[0].Status);
+
+        Assert.Equal(
+            ScannerProgressStatus.Running,
+            progressNotifier.Notifications[1].Status);
+
+        Assert.Equal(
+            ScannerProgressStatus.Failed,
+            progressNotifier.Notifications[2].Status);
+    }
 }

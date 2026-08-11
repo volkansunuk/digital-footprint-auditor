@@ -3,6 +3,7 @@ using DigitalFootprintAuditor.Application.Dtos;
 using DigitalFootprintAuditor.Domain.Entities;
 using DigitalFootprintAuditor.Domain.Enums;
 using DigitalFootprintAuditor.Infrastructure.Persistence;
+using DigitalFootprintAuditor.Application.Realtime;
 using Microsoft.EntityFrameworkCore;
 
 namespace DigitalFootprintAuditor.Infrastructure.Services;
@@ -12,20 +13,23 @@ public class ScanService : IScanService
     private readonly ApplicationDbContext _dbContext;
     private readonly IReadOnlyCollection<IScanner> _scanners;
     private readonly IRiskCalculator _riskCalculator;
+    private readonly IScanProgressNotifier _progressNotifier;
 
     public ScanService(
         ApplicationDbContext dbContext,
         IEnumerable<IScanner> scanners,
-        IRiskCalculator riskCalculator)
+        IRiskCalculator riskCalculator,
+        IScanProgressNotifier progressNotifier)
     {
         _dbContext = dbContext;
         _scanners = scanners.ToList();
         _riskCalculator = riskCalculator;
+        _progressNotifier = progressNotifier;
     }
 
-    public async Task<ScanResponseDto> CreateScanAsync(
-        CreateScanRequestDto request,
-        CancellationToken cancellationToken)
+    public async Task<Guid> PrepareScanAsync(
+    CreateScanRequestDto request,
+    CancellationToken cancellationToken)
     {
         var scan = new Scan
         {
@@ -49,12 +53,53 @@ public class ScanService : IScanService
         _dbContext.Scans.Add(scan);
         _dbContext.ScanTargets.AddRange(targets);
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(
+            cancellationToken);
+
+        return scan.Id;
+    }
+
+    
+    
+
+    public async Task<ScanResponseDto> CreateScanAsync(
+    CreateScanRequestDto request,
+    CancellationToken cancellationToken)
+    {
+        var scanId = await PrepareScanAsync(
+            request,
+            cancellationToken);
+
+        return await RunScanAsync(
+            scanId,
+            cancellationToken);
+    }
+
+    public async Task<ScanResponseDto> RunScanAsync(
+    Guid scanId,
+    CancellationToken cancellationToken)
+    {
+        var scan = await _dbContext.Scans
+            .FirstOrDefaultAsync(
+                scan => scan.Id == scanId,
+                cancellationToken);
+
+        if (scan is null)
+        {
+            throw new InvalidOperationException(
+                $"Scan with ID {scanId} was not found.");
+        }
+
+        var targets = await _dbContext.ScanTargets
+            .Where(target => target.ScanId == scanId)
+            .ToListAsync(cancellationToken);
 
         scan.Status = ScanStatus.Running;
 
-        var allFindings = new List<ScanFinding>();
+        await _dbContext.SaveChangesAsync(
+            cancellationToken);
 
+        var allFindings = new List<ScanFinding>();
         var hasScannerFailure = false;
 
         foreach (var target in targets)
@@ -65,6 +110,16 @@ public class ScanService : IScanService
                         target.TargetType))
                 .ToList();
 
+            foreach (var scanner in matchingScanners)
+            {
+                await _progressNotifier.NotifyAsync(
+                    new ScannerProgressDto(
+                        scan.Id,
+                        scanner.GetType().Name,
+                        ScannerProgressStatus.Pending),
+                    cancellationToken);
+            }
+
             var scannerTasks = matchingScanners
                 .Select(scanner =>
                     ExecuteScannerSafelyAsync(
@@ -73,11 +128,13 @@ public class ScanService : IScanService
                         cancellationToken))
                 .ToList();
 
-            var scannerResults = await Task.WhenAll(scannerTasks);
+            var scannerResults =
+                await Task.WhenAll(scannerTasks);
 
             foreach (var scannerResult in scannerResults)
             {
-                allFindings.AddRange(scannerResult.Findings);
+                allFindings.AddRange(
+                    scannerResult.Findings);
 
                 if (scannerResult.HasFailed)
                 {
@@ -88,11 +145,13 @@ public class ScanService : IScanService
 
         if (allFindings.Count > 0)
         {
-            _dbContext.ScanFindings.AddRange(allFindings);
+            _dbContext.ScanFindings.AddRange(
+                allFindings);
         }
 
         scan.RiskScore =
-            _riskCalculator.CalculateScore(allFindings);
+            _riskCalculator.CalculateScore(
+                allFindings);
 
         scan.RiskLevel =
             _riskCalculator.CalculateRiskLevel(
@@ -101,10 +160,18 @@ public class ScanService : IScanService
         scan.Status = hasScannerFailure
             ? ScanStatus.PartiallyCompleted
             : ScanStatus.Completed;
+
         scan.CompletedAt = DateTime.UtcNow;
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(
+            cancellationToken);
 
+        var targetDtos = targets
+            .Select(target =>
+                new ScanTargetInputDto(
+                    target.TargetType,
+                    target.TargetValue))
+            .ToList();
 
         return new ScanResponseDto(
             scan.Id,
@@ -113,7 +180,7 @@ public class ScanService : IScanService
             scan.Status,
             scan.RiskScore,
             scan.RiskLevel,
-            request.Targets,
+            targetDtos,
             allFindings
                 .Select(MapFindingToDto)
                 .ToList(),
@@ -307,14 +374,30 @@ public class ScanService : IScanService
     }
 
     private async Task<ScannerExecutionResult> ExecuteScannerSafelyAsync(
-        IScanner scanner,
-        ScanTarget target,
-        CancellationToken cancellationToken)
+    IScanner scanner,
+    ScanTarget target,
+    CancellationToken cancellationToken)
     {
+        var scannerName = scanner.GetType().Name;
+
+        await _progressNotifier.NotifyAsync(
+            new ScannerProgressDto(
+                target.ScanId,
+                scannerName,
+                ScannerProgressStatus.Running),
+            cancellationToken);
+
         try
         {
             var findings = await scanner.ScanAsync(
                 target,
+                cancellationToken);
+
+            await _progressNotifier.NotifyAsync(
+                new ScannerProgressDto(
+                    target.ScanId,
+                    scannerName,
+                    ScannerProgressStatus.Completed),
                 cancellationToken);
 
             return new ScannerExecutionResult(
@@ -327,9 +410,16 @@ public class ScanService : IScanService
         }
         catch (Exception)
         {
+            await _progressNotifier.NotifyAsync(
+                new ScannerProgressDto(
+                    target.ScanId,
+                    scannerName,
+                    ScannerProgressStatus.Failed),
+                cancellationToken);
+
             var failureFinding = CreateScannerFailureFinding(
                 target.ScanId,
-                scanner.GetType().Name);
+                scannerName);
 
             return new ScannerExecutionResult(
                 new[] { failureFinding },

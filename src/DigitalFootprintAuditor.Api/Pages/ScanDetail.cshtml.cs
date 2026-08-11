@@ -36,4 +36,19 @@ public class ScanDetailModel : PageModel
 
         return Page();
     }
+
+    public async Task<IActionResult> OnPostStartScanAsync(
+    Guid id,
+    CancellationToken cancellationToken)
+    {
+        await _scanService.RunScanAsync(
+            id,
+            cancellationToken);
+
+        return new JsonResult(new
+        {
+            success = true
+        });
+    }
+    
 }

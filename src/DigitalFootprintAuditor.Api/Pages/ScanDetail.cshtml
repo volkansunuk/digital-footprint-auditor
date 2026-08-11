@@ -18,6 +18,26 @@
 
 @if (Model.Scan is not null)
 {
+
+    <form id="antiforgery-form"
+        style="display:none;">
+        @Html.AntiForgeryToken()
+    </form>
+
+    <section id="live-progress-section"
+             class="section"
+             style="display:none;">
+
+        <div class="section-heading">
+            <span class="eyebrow">Canlı İlerleme</span>
+            <h2>Scanner Durumları</h2>
+        </div>
+
+        <div id="live-scanner-statuses"
+             class="scanner-status-list">
+        </div>
+    </section>
+
     <section class="summary-grid">
         <article class="summary-card">
             <span>Risk Puanı</span>
@@ -175,4 +195,143 @@ else
             </a>
         </div>
     </div>
+}
+
+@if (Model.Scan is not null)
+{
+    <script src="~/lib/signalr/signalr.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async function () {
+            const scanId = "@Model.Scan.Id";
+
+            const urlParams =
+                new URLSearchParams(window.location.search);
+
+            const shouldStart =
+                (urlParams.get("start") ?? "")
+                .toLowerCase() === "true";
+
+            if (!shouldStart) {
+                return;
+            }
+
+            const progressSection =
+                document.getElementById(
+                    "live-progress-section");
+
+            const statusContainer =
+                document.getElementById(
+                    "live-scanner-statuses");
+
+            progressSection.style.display = "block";
+
+            const scannerElements = new Map();
+
+            const connection =
+                new signalR.HubConnectionBuilder()
+                    .withUrl("/hubs/scan-progress")
+                    .withAutomaticReconnect()
+                    .build();
+
+            connection.on(
+                "ScannerProgressUpdated",
+                function (progress) {
+                    updateScannerStatus(progress);
+                });
+
+            function updateScannerStatus(progress) {
+                const scannerName =
+                    progress.scannerName;
+
+                const status =
+                    progress.status;
+
+                let row =
+                    scannerElements.get(scannerName);
+
+                if (!row) {
+                    row = document.createElement("div");
+                    row.className =
+                        "scanner-status-item";
+
+                    const nameElement =
+                        document.createElement("strong");
+
+                    nameElement.textContent =
+                        scannerName;
+
+                    const statusElement =
+                        document.createElement("span");
+
+                    statusElement.className =
+                        "status-badge";
+
+                    row.appendChild(nameElement);
+                    row.appendChild(statusElement);
+
+                    statusContainer.appendChild(row);
+
+                    scannerElements.set(
+                        scannerName,
+                        row);
+                }
+
+                const statusElement =
+                    row.querySelector(".status-badge");
+
+                statusElement.textContent =
+                    status;
+
+                statusElement.className =
+                    "status-badge";
+
+                if (status === "Completed") {
+                    statusElement.classList.add(
+                        "status-success");
+                }
+                else if (status === "Failed") {
+                    statusElement.classList.add(
+                        "status-failed");
+                }
+                else {
+                    statusElement.classList.add(
+                        "status-running");
+                }
+            }
+
+            try {
+                await connection.start();
+
+                await connection.invoke(
+                    "JoinScanGroup",
+                    scanId);
+
+                const response = await fetch(
+                    `?handler=StartScan&id=${scanId}`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "RequestVerificationToken":
+                                document.querySelector(
+                                    'input[name="__RequestVerificationToken"]'
+                                ).value
+                        }
+                    });
+
+                if (!response.ok) {
+                    throw new Error(
+                        "Tarama başlatılamadı.");
+                }
+
+                window.location.href =
+                    `/ScanDetail?id=${scanId}`;
+            }
+            catch (error) {
+                console.error(
+                    "SignalR tarama hatası:",
+                    error);
+            }
+        });
+    </script>
 }

@@ -9,6 +9,7 @@ using DigitalFootprintAuditor.Infrastructure.Rdap;
 using DigitalFootprintAuditor.Infrastructure.Scanners;
 using DigitalFootprintAuditor.Infrastructure.Services;
 using DigitalFootprintAuditor.Infrastructure.Dns;
+using DigitalFootprintAuditor.Api.Hubs;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
@@ -102,6 +103,9 @@ builder.Services.AddScoped<IScanner, DnsSecurityScanner>();
 builder.Services.AddScoped<IScanner, HttpsScanner>();
 builder.Services.AddScoped<IScanner, SecurityHeadersScanner>();
 builder.Services.AddScoped<IScanner, GitHubRepositoryScanner>();
+builder.Services.AddScoped<
+    IScanProgressNotifier,
+    SignalRScanProgressNotifier>();
 
 //dns istemcisi
 builder.Services.AddSingleton<DnsClient.LookupClient>();
@@ -121,6 +125,14 @@ builder.Services.AddControllers()
     });
 
 builder.Services.AddRazorPages();
+
+builder.Services
+    .AddSignalR()
+    .AddJsonProtocol(options =>
+    {
+        options.PayloadSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter());
+    });
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -155,5 +167,7 @@ app.MapGet("/api/health", () => Results.Ok(new
 app.MapControllers();
 
 app.MapRazorPages();
+
+app.MapHub<ScanProgressHub>("/hubs/scan-progress");
 
 app.Run();
