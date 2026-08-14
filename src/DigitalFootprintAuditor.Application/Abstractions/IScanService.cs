@@ -1,8 +1,6 @@
 using DigitalFootprintAuditor.Application.Dtos;
 namespace DigitalFootprintAuditor.Application.Abstractions;
 
-/* burada bir interface oluşturduk çünkü Katmanlı mimaride (Clean Architecture) API katmanının,
- veritabanı veya iş mantığının arkada tam olarak nasıl çalıştığını bilmesini istemeyiz.*/ 
 public interface IScanService
 {
     Task<ScanResponseDto> CreateScanAsync(CreateScanRequestDto request, CancellationToken cancellationToken); 
@@ -16,6 +14,5 @@ public interface IScanService
 
     Task<ScanResponseDto> RunScanAsync(
         Guid scanId,
-        CancellationToken cancellationToken);
-    
+        CancellationToken cancellationToken);    
 }

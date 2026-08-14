@@ -1,7 +1,6 @@
 namespace DigitalFootprintAuditor.Application.Dtos;
 using DigitalFootprintAuditor.Domain.Enums;
 
-/* taramada bulunan açığın dışarı sunulacak detayları*/
 public record ScanFindingDto 
 (
     Guid Id,

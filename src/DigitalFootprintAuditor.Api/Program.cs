@@ -19,12 +19,6 @@ using DigitalFootprintAuditor.Infrastructure.Web;
 var builder = WebApplication.CreateBuilder(args);
 
 // Aşama 5 — GitHub dış servis istemcisi
-// [x] GitHubClient typed HttpClient olarak kaydedildi.
-// [x] GitHub API temel adresi yapılandırıldı.
-// [x] GitHub için gerekli User-Agent ve Accept header'ları eklendi.
-// [x] Harici servisin sonsuza kadar beklenmemesi için timeout tanımlandı.
-// [x] Gün 8: 404, 403/rate limit ve diğer hata durumları yönetilecek.
-// [ ] İlerleyen aşamalarda diğer dış servis istemcileri eklenecek.
 builder.Services.AddHttpClient<GitHubClient>(client =>
 {
     client.BaseAddress = new Uri("https://api.github.com/");
@@ -37,8 +31,6 @@ builder.Services.AddHttpClient<GitHubClient>(client =>
 // Geliştirme ortamında /swagger adresinden görüntülenir.
 builder.Services.AddOpenApi();
 
-//github için
-//gravatar için
 var gravatarBaseUrl =
     builder.Configuration["ExternalServices:Gravatar:BaseUrl"]
     ?? throw new InvalidOperationException(
@@ -73,16 +65,11 @@ builder.Services
         });
 
 // Aşama 3 — EF Core ve veritabanı
-// [x] ApplicationDbContext DI sistemine kaydedildi.
-// [x] Veritabanı sağlayıcısı olarak SQL Server seçildi.
-// [x] DefaultConnection değeri configuration üzerinden okunuyor.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Aşama 4 — Application servisleri
-// [x] IScanService istendiğinde ScanService kullanılacak.
-// [x] application servisleri burada 
 builder.Services.AddScoped<IScanService, ScanService>();
 builder.Services.AddScoped<IRiskCalculator, RiskScoringService>();
 builder.Services.AddScoped<IValidator<CreateScanRequestDto>, CreateScanRequestValidator>();
@@ -91,11 +78,6 @@ builder.Services.AddScoped<IValidator<ScanTargetInputDto>, ScanTargetInputValida
 
 
 // Aşama 5 — Scanner kayıtları
-// [x] GitHubProfileScanner, IScanner sözleşmesi üzerinden kaydedildi.
-// [ ] İlerleyen aşamalarda Gravatar, RDAP, DNS, HTTPS ve diğer scanner'lar eklenecek.
-// [ ] Orchestration aşamasında bütün scanner'lar IEnumerable<IScanner>
-//     üzerinden toplu şekilde çözümlenecek.
-// Scanner kayıtları burada
 builder.Services.AddScoped<IScanner, GitHubProfileScanner>();
 builder.Services.AddScoped<IScanner, GravatarScanner>();
 builder.Services.AddScoped<IScanner, RdapDomainScanner>();
@@ -161,9 +143,6 @@ app.MapGet("/api/health", () => Results.Ok(new
 }));
 
 // Aşama 4 — Scan API
-// [x] Endpointler Controllers/ScansController.cs dosyasına taşındı.
-// [x] MapControllers çağrısı controller endpointlerini routing sistemine ekliyor.
-// [ ] Yeni controller eklendiğinde ayrıca MapControllers çağrısı eklemek gerekmez.
 app.MapControllers();
 
 app.MapRazorPages();

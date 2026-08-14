@@ -3,7 +3,7 @@ using DigitalFootprintAuditor.Domain.Enums;
 public class ScanFinding
 {
     public Guid Id {get; set;} = Guid.NewGuid();
-    public Guid ScanId {get; set;} //scan ile scan finding arasında ilişki kurulacak
+    public Guid ScanId {get; set;} 
     public string ScannerName {get; set;} = string.Empty;
     public string Title {get; set;} = string.Empty;
     public string Description {get; set;} = string.Empty;

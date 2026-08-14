@@ -48,7 +48,6 @@ public class RdapDomainScannerTests
         Assert.Throws<ArgumentException>(() =>
             RdapDomainScanner.NormalizeDomain(input));
     }
-
     [Fact]
     public async Task ScanAsync_ShouldReturnTimeoutFinding_WhenClientTimesOut()
     {
@@ -66,7 +65,6 @@ public class RdapDomainScannerTests
         Assert.Equal("RDAP İsteği Zaman Aşımına Uğradı", finding.Title);
         Assert.Equal(FindingSeverity.Low, finding.Severity);
     }
-
     [Fact]
     public async Task ScanAsync_ShouldReturnConnectionErrorFinding_WhenClientThrowsHttpRequestException()
     {
@@ -84,7 +82,6 @@ public class RdapDomainScannerTests
         Assert.Equal("RDAP Servisine Ulaşılamadı", finding.Title);
         Assert.Equal(FindingSeverity.Low, finding.Severity);
     }
-
     [Fact]
     public async Task ScanAsync_ShouldPropagateCancellation_WhenCallerCancelsRequest()
     {
@@ -104,7 +101,6 @@ public class RdapDomainScannerTests
                 target,
                 CancellationToken.None));
     }
-
     [Fact]
     public async Task ScanAsync_ShouldDescribeMissingRegistrarAndNameserversSafely()
     {

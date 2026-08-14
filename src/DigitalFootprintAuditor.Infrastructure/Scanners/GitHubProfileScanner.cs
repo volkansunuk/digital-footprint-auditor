@@ -2,7 +2,6 @@ using DigitalFootprintAuditor.Application.Abstractions;
 using DigitalFootprintAuditor.Domain.Entities;
 using DigitalFootprintAuditor.Domain.Enums;
 using DigitalFootprintAuditor.Infrastructure.GitHub;
-using DigitalFootprintAuditor.Infrastructure.GitHub.Models;
 
 namespace DigitalFootprintAuditor.Infrastructure.Scanners;
 
@@ -14,7 +13,7 @@ public sealed class GitHubProfileScanner : IScanner
     {
         _gitHubClient = gitHubClient;
     }
-    //***
+
     public IReadOnlyCollection<TargetType> SupportedTargetTypes =>
         new[] { TargetType.GitHubUsername };
 

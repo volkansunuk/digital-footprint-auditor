@@ -5,12 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalFootprintAuditor.Api.Controllers;
 
-/* burası projenin dış dünyaya açılan kapısı*/
-
-[ApiController] /* .NET' e bu sınıfın bir web api olduğunu söyler. Gelen JSON verilerini 
-otomatik olarak C# nesnelerine dönüştürür ve hatalı veri tiplerini otomatik yakalar.*/
-[Route("api/[controller]")] /* API'mizin web adresini belirler. [controller] kelimesi 
-otomatik olarak sınıf adının başındaki ismi alır. Yani bu endpoint'lerin adresi api/scans olur.*/
+[ApiController] 
+[Route("api/[controller]")] 
 public class ScansController : ControllerBase
 {
     private readonly IScanService _scanService;

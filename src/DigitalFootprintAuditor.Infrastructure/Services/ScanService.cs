@@ -26,42 +26,6 @@ public class ScanService : IScanService
         _riskCalculator = riskCalculator;
         _progressNotifier = progressNotifier;
     }
-
-    public async Task<Guid> PrepareScanAsync(
-    CreateScanRequestDto request,
-    CancellationToken cancellationToken)
-    {
-        var scan = new Scan
-        {
-            Id = Guid.NewGuid(),
-            CreatedAt = DateTime.UtcNow,
-            Status = ScanStatus.Pending,
-            RiskScore = 0,
-            RiskLevel = RiskLevel.Low
-        };
-
-        var targets = request.Targets
-            .Select(target => new ScanTarget
-            {
-                Id = Guid.NewGuid(),
-                ScanId = scan.Id,
-                TargetType = target.TargetType,
-                TargetValue = target.TargetValue
-            })
-            .ToList();
-
-        _dbContext.Scans.Add(scan);
-        _dbContext.ScanTargets.AddRange(targets);
-
-        await _dbContext.SaveChangesAsync(
-            cancellationToken);
-
-        return scan.Id;
-    }
-
-    
-    
-
     public async Task<ScanResponseDto> CreateScanAsync(
     CreateScanRequestDto request,
     CancellationToken cancellationToken)
@@ -73,6 +37,109 @@ public class ScanService : IScanService
         return await RunScanAsync(
             scanId,
             cancellationToken);
+    }
+    
+    public async Task<ScanResponseDto?> GetScanByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var scan = await _dbContext.Scans
+            .Include(scan => scan.Findings)
+            .FirstOrDefaultAsync(
+                scan => scan.Id == id,
+                cancellationToken);
+
+        if (scan is null)
+        {
+            return null;
+        }
+
+        var scanTargets = await _dbContext.ScanTargets
+            .Where(target => target.ScanId == id)
+            .Select(target => new ScanTargetInputDto(
+                target.TargetType,
+                target.TargetValue))
+            .ToListAsync(cancellationToken);
+
+        scan.RiskScore = _riskCalculator.CalculateScore(scan.Findings);
+        scan.RiskLevel = _riskCalculator.CalculateRiskLevel(scan.RiskScore);
+
+        return new ScanResponseDto(
+            scan.Id,
+            scan.CreatedAt,
+            scan.CompletedAt,
+            scan.Status,
+            scan.RiskScore,
+            scan.RiskLevel,
+            scanTargets,
+            scan.Findings
+                .Select(MapFindingToDto)
+                .ToList(),
+            BuildScannerStatuses(scan.Findings));
+    }
+    public async Task<IReadOnlyCollection<ScanResponseDto>> GetAllScansAsync(
+        CancellationToken cancellationToken)
+    {
+        var scans = await _dbContext.Scans
+            .Include(scan => scan.Findings)
+            .OrderByDescending(scan => scan.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        var scanIds = scans
+            .Select(scan => scan.Id)
+            .ToList();
+
+        var allTargets = await _dbContext.ScanTargets
+            .Where(target => scanIds.Contains(target.ScanId))
+            .ToListAsync(cancellationToken);
+
+
+        return scans
+            .Select(scan =>
+            {
+                var targetsForScan = allTargets
+                    .Where(target => target.ScanId == scan.Id)
+                    .Select(target => new ScanTargetInputDto(
+                        target.TargetType,
+                        target.TargetValue))
+                    .ToList();
+
+                scan.RiskScore = _riskCalculator.CalculateScore(scan.Findings);
+                scan.RiskLevel = _riskCalculator.CalculateRiskLevel(scan.RiskScore);
+
+                return new ScanResponseDto(
+                    scan.Id,
+                    scan.CreatedAt,
+                    scan.CompletedAt,
+                    scan.Status,
+                    scan.RiskScore,
+                    scan.RiskLevel,
+                    targetsForScan,
+                    scan.Findings
+                        .Select(MapFindingToDto)
+                        .ToList(),
+                    BuildScannerStatuses(scan.Findings));
+            })
+            .ToList();
+    }
+    public async Task<bool> DeleteScanAsync(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var scan = await _dbContext.Scans.FindAsync(
+            [id],
+            cancellationToken);
+
+        if (scan is null)
+        {
+            return false;
+        }
+
+        _dbContext.Scans.Remove(scan);
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return true;
     }
 
     public async Task<ScanResponseDto> RunScanAsync(
@@ -186,112 +253,37 @@ public class ScanService : IScanService
                 .ToList(),
             BuildScannerStatuses(allFindings));
     }
-
-    public async Task<ScanResponseDto?> GetScanByIdAsync(
-        Guid id,
+    public async Task<Guid> PrepareScanAsync(
+        CreateScanRequestDto request,
         CancellationToken cancellationToken)
     {
-        var scan = await _dbContext.Scans
-            .Include(scan => scan.Findings)
-            .FirstOrDefaultAsync(
-                scan => scan.Id == id,
-                cancellationToken);
-
-        if (scan is null)
+        var scan = new Scan
         {
-            return null;
-        }
+            Id = Guid.NewGuid(),
+            CreatedAt = DateTime.UtcNow,
+            Status = ScanStatus.Pending,
+            RiskScore = 0,
+            RiskLevel = RiskLevel.Low
+        };
 
-        var scanTargets = await _dbContext.ScanTargets
-            .Where(target => target.ScanId == id)
-            .Select(target => new ScanTargetInputDto(
-                target.TargetType,
-                target.TargetValue))
-            .ToListAsync(cancellationToken);
-
-        scan.RiskScore = _riskCalculator.CalculateScore(scan.Findings);
-        scan.RiskLevel = _riskCalculator.CalculateRiskLevel(scan.RiskScore);
-
-        return new ScanResponseDto(
-            scan.Id,
-            scan.CreatedAt,
-            scan.CompletedAt,
-            scan.Status,
-            scan.RiskScore,
-            scan.RiskLevel,
-            scanTargets,
-            scan.Findings
-                .Select(MapFindingToDto)
-                .ToList(),
-            BuildScannerStatuses(scan.Findings));
-    }
-
-    public async Task<IReadOnlyCollection<ScanResponseDto>> GetAllScansAsync(
-        CancellationToken cancellationToken)
-    {
-        var scans = await _dbContext.Scans
-            .Include(scan => scan.Findings)
-            .OrderByDescending(scan => scan.CreatedAt)
-            .ToListAsync(cancellationToken);
-
-        var scanIds = scans
-            .Select(scan => scan.Id)
-            .ToList();
-
-        var allTargets = await _dbContext.ScanTargets
-            .Where(target => scanIds.Contains(target.ScanId))
-            .ToListAsync(cancellationToken);
-
-
-        return scans
-            .Select(scan =>
+        var targets = request.Targets
+            .Select(target => new ScanTarget
             {
-                var targetsForScan = allTargets
-                    .Where(target => target.ScanId == scan.Id)
-                    .Select(target => new ScanTargetInputDto(
-                        target.TargetType,
-                        target.TargetValue))
-                    .ToList();
-
-                scan.RiskScore = _riskCalculator.CalculateScore(scan.Findings);
-                scan.RiskLevel = _riskCalculator.CalculateRiskLevel(scan.RiskScore);
-
-                return new ScanResponseDto(
-                    scan.Id,
-                    scan.CreatedAt,
-                    scan.CompletedAt,
-                    scan.Status,
-                    scan.RiskScore,
-                    scan.RiskLevel,
-                    targetsForScan,
-                    scan.Findings
-                        .Select(MapFindingToDto)
-                        .ToList(),
-                    BuildScannerStatuses(scan.Findings));
+                Id = Guid.NewGuid(),
+                ScanId = scan.Id,
+                TargetType = target.TargetType,
+                TargetValue = target.TargetValue
             })
             .ToList();
-    }
 
-    public async Task<bool> DeleteScanAsync(
-        Guid id,
-        CancellationToken cancellationToken)
-    {
-        var scan = await _dbContext.Scans.FindAsync(
-            [id],
+        _dbContext.Scans.Add(scan);
+        _dbContext.ScanTargets.AddRange(targets);
+
+        await _dbContext.SaveChangesAsync(
             cancellationToken);
 
-        if (scan is null)
-        {
-            return false;
-        }
-
-        _dbContext.Scans.Remove(scan);
-
-        await _dbContext.SaveChangesAsync(cancellationToken);
-
-        return true;
+        return scan.Id;
     }
-
     private ScanFindingDto MapFindingToDto(ScanFinding finding)
     {
         return new ScanFindingDto(

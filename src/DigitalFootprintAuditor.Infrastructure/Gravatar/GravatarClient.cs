@@ -37,6 +37,5 @@ public sealed class GravatarClient : IGravatarClient
             gravatarResponse.DisplayName,
             gravatarResponse.PreferredUsername
         );
-
     }
 }

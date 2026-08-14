@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-
 namespace DigitalFootprintAuditor.Infrastructure.Gravatar.Models;
 
 public sealed record GravatarProfileResponse(

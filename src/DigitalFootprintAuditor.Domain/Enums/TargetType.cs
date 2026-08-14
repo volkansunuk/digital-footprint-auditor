@@ -1,5 +1,5 @@
 namespace DigitalFootprintAuditor.Domain.Enums;
-public enum TargetType //bunu enum'un içine ekledim çünkü başka yerde de kullanabilirim
+public enum TargetType 
 {
     Email,
     GitHubUsername,

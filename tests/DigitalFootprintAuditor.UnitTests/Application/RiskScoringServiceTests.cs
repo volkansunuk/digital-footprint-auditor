@@ -22,7 +22,7 @@ public class RiskScoringServiceTests
         Assert.Equal(55, result);
     }
 
-        [Fact]
+    [Fact]
     public void CalculateScore_ShouldReturnZero_WhenFindingsAreEmpty()
     {
         var findings = Array.Empty<ScanFinding>();

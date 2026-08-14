@@ -2,18 +2,15 @@ using DigitalFootprintAuditor.Application.Abstractions;
 using DigitalFootprintAuditor.Domain.Entities;
 using DigitalFootprintAuditor.Domain.Enums;
 
-
 namespace DigitalFootprintAuditor.Infrastructure.Scanners;
 
 public sealed class RdapDomainScanner : IScanner
 {
     private readonly IRdapClient _rdapClient;
-
     public RdapDomainScanner(IRdapClient rdapClient)
     {
         _rdapClient = rdapClient;
     }
-
     public IReadOnlyCollection<TargetType> SupportedTargetTypes =>
         new[] { TargetType.Domain };
 
@@ -196,9 +193,4 @@ public sealed class RdapDomainScanner : IScanner
             CreatedAt = DateTime.UtcNow
         };
     }
-
 }
-
-    
-
-
