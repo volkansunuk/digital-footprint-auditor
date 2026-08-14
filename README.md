@@ -2,7 +2,9 @@
 
 Kendi dijital ayak izinizi ve size ait domainlerin temel güvenlik durumunu analiz eden, **eğitim amaçlı** bir web uygulaması.
 
-Bu repository, iki stajyerin 20 iş günü boyunca birlikte geliştireceği bir proje iskeletidir. Kod bilerek boş bırakılmıştır: yön bellidir, geliştirme sorumluluğu sizdedir.
+Bu repository, iki stajyerin 20 iş günü boyunca geliştirdiği eğitim amaçlı bir uygulamadır.
+
+> **Güncel durum:** Uygulamada scan API'si, GitHub, Gravatar, RDAP, DNS e-posta güvenliği ve HTTPS/header scanner'ları, risk puanlama, temel web arayüzü ve unit testler bulunmaktadır. Aşağıdaki Docker kurulumu mevcut uygulamayı SQL Server ile çalıştırır.
 
 > **Önce şunu okuyun:** [Etik ve Güvenlik Sınırları](#2-etik-ve-güvenlik-sınırları). Bu proje bir kişi araştırma aracı değildir ve asla o yönde geliştirilmeyecektir.
 
@@ -116,20 +118,55 @@ dotnet build
 dotnet run --project src/DigitalFootprintAuditor.Api
 ```
 
+### Docker ile çalıştırma
+
+Bu proje, mevcut Entity Framework Core yapılandırması nedeniyle **SQL Server** kullanır. Docker Desktop kurulu olmalıdır.
+
+Windows PowerShell:
+
+```powershell
+# 1. Yerel SQL Server parolanızı oluşturun
+Copy-Item .env.example .env
+
+# 2. .env içindeki MSSQL_SA_PASSWORD değerini güçlü bir parola ile değiştirin
+
+# 3. API, SQL Server ve migration servisini başlatın
+docker compose up --build
+```
+
+Uygulama `http://localhost:8080/`, Swagger ise `http://localhost:8080/swagger` adresinde açılır.
+
+Kapatmak için:
+
+```bash
+docker compose down
+```
+
+Veritabanı verilerini de silip tamamen temiz bir başlangıç yapmak için:
+
+```bash
+docker compose down --volumes
+```
+
+> `docker compose down --volumes` kalıcı SQL Server verisini siler. Normal kullanımda yalnızca `docker compose down` kullanın.
+
+### Testleri çalıştırma
+
+```bash
+dotnet test tests/DigitalFootprintAuditor.UnitTests
+```
+
+Beklenen sonuç: 25 test başarılı, 0 başarısız.
+
 ### Beklenen çıktı
 
 Uygulama başladığında konsolda `Now listening on: http://localhost:XXXX` benzeri bir satır görürsünüz.
 
-- Tarayıcıda `http://localhost:XXXX/` adresine gidin. Şu cevabı görmelisiniz:
-
-```json
-{
-  "name": "Digital Footprint Auditor",
-  "status": "Running"
-}
-```
+- Tarayıcıda `http://localhost:XXXX/` adresine gidin. Yeni tarama ekranı açılmalıdır.
 
 - `http://localhost:XXXX/swagger` adresinde Swagger arayüzü açılmalıdır.
+
+Sunum için adım adım akış: [docs/demo-script.md](docs/demo-script.md)
 
 > **Swagger nedir?** API'nizin tüm endpointlerini otomatik listeleyen ve tarayıcıdan denemenize izin veren bir dokümantasyon arayüzüdür. Postman kullanmadan API'nizi test edebilirsiniz.
 

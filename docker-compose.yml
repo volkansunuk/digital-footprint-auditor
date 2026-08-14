@@ -1,0 +1,50 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Express
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q \"SELECT 1\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  migrate:
+    build:
+      context: .
+      target: migration
+    environment:
+      ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=DigitalFootprintAuditor;User Id=sa;Password=${MSSQL_SA_PASSWORD};Encrypt=False;TrustServerCertificate=True
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    command:
+      - database
+      - update
+      - --project
+      - src/DigitalFootprintAuditor.Infrastructure/DigitalFootprintAuditor.Infrastructure.csproj
+      - --startup-project
+      - src/DigitalFootprintAuditor.Api/DigitalFootprintAuditor.Api.csproj
+
+  api:
+    build:
+      context: .
+      target: final
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=DigitalFootprintAuditor;User Id=sa;Password=${MSSQL_SA_PASSWORD};Encrypt=False;TrustServerCertificate=True
+    ports:
+      - "8080:8080"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  sqlserver_data:
