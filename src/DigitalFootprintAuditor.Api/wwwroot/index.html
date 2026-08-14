@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Digital Footprint Auditor</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Digital Footprint Auditor</h1>
+        <p class="subtitle">Yeni bir tarama başlatın</p>
+<a href="history.html" class="nav-link">Tarama Geçmişini Görüntüle</a>
+        <form id="scanForm">
+            <div id="targetsContainer">
+                <div class="target-row">
+                    <select class="target-type">
+                        <option value="0">Email</option>
+                        <option value="1">GitHub Kullanıcı Adı</option>
+                        <option value="2">Domain</option>
+                        <option value="3">Website</option>
+                    </select>
+                    <input type="text" class="target-value" placeholder="Hedef değeri girin" required>
+                    <button type="button" class="remove-btn" onclick="removeTargetRow(this)">Sil</button>
+                </div>
+            </div>
+
+            <button type="button" id="addTargetBtn">+ Hedef Ekle</button>
+            <button type="submit" id="submitBtn">Taramayı Başlat</button>
+        </form>
+
+        <div id="resultContainer"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,13 +1,18 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>28af359a-59d0-47d6-bc8f-351e537bb7c0</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <!-- Microsoft.AspNetCore.OpenApi, Microsoft.OpenApi 2.0.0'ı transitif getirir; bu sürümde
          bilinen bir güvenlik zafiyeti (GHSA-v5pm-xwqc-g5wc) olduğu için sürümü sabitliyoruz. -->
     <PackageReference Include="Microsoft.OpenApi" Version="2.7.6" />
