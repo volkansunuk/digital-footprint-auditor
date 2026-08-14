@@ -1,0 +1,142 @@
+@page
+
+@{
+    ViewData["Title"] = "Ana Sayfa";
+}
+
+<section class="hero">
+    <div class="hero-content">
+        <span class="eyebrow">
+            Eğitim Amaçlı Dijital Güvenlik Analizi
+        </span>
+
+        <h1>
+            Dijital ayak izinizi daha anlaşılır hale getirin.
+        </h1>
+
+        <p class="hero-description">
+            Size ait e-posta, GitHub hesabı, domain ve web sitesi
+            bilgileri üzerinde temel güvenlik ve görünürlük
+            kontrolleri gerçekleştirin.
+        </p>
+
+        <div class="hero-actions">
+            <a class="button button-primary" asp-page="/NewScan">
+                Yeni Tarama Başlat
+            </a>
+
+            <a class="button button-secondary" asp-page="/About">
+                Etik Kullanımı İncele
+            </a>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-heading">
+        <span class="eyebrow">Kontroller</span>
+        <h2>Neleri analiz ediyoruz?</h2>
+
+        <p>
+            Uygulama yalnızca açık, izinli ve savunmacı kontroller
+            gerçekleştirir.
+        </p>
+    </div>
+
+    <div class="card-grid">
+        <article class="feature-card">
+            <h3>GitHub</h3>
+            <p>
+                Açık profil bilgileri ve public repository
+                görünürlüğü incelenir.
+            </p>
+        </article>
+
+        <article class="feature-card">
+            <h3>RDAP</h3>
+            <p>
+                Domain kayıt tarihi, registrar ve nameserver
+                bilgileri analiz edilir.
+            </p>
+        </article>
+
+        <article class="feature-card">
+            <h3>DNS</h3>
+            <p>
+                A, AAAA, MX, SPF ve DMARC kayıtları kontrol edilir.
+            </p>
+        </article>
+
+        <article class="feature-card">
+            <h3>HTTPS</h3>
+            <p>
+                HTTPS kullanımı, yönlendirme ve temel güvenlik
+                başlıkları kontrol edilir.
+            </p>
+        </article>
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-heading">
+        <span class="eyebrow">Nasıl Çalışır?</span>
+        <h2>Üç adımda dijital güvenlik görünümü</h2>
+
+        <p>
+            Tarama süreci basit tutulur ve her bulgu kullanıcıya
+            açıklanabilir şekilde sunulur.
+        </p>
+    </div>
+
+    <div class="steps-grid">
+        <article class="step-card">
+            <span class="step-number">1</span>
+
+            <h3>Varlıklarını Gir</h3>
+
+            <p>
+                E-posta, GitHub kullanıcı adı, domain veya web sitesi
+                bilgilerinden istediğinizi girin.
+            </p>
+        </article>
+
+        <article class="step-card">
+            <span class="step-number">2</span>
+
+            <h3>Scanner'lar Kontrol Etsin</h3>
+
+            <p>
+                Hedef türüne uygun scanner'lar seçilir ve izinli,
+                açık kaynaklardan gerekli kontroller yapılır.
+            </p>
+        </article>
+
+        <article class="step-card">
+            <span class="step-number">3</span>
+
+            <h3>Sonuçları İncele</h3>
+
+            <p>
+                Bulgular, açıklamalar ve risk puanına yapılan katkılar
+                anlaşılır şekilde gösterilir.
+            </p>
+        </article>
+    </div>
+</section>
+
+<section class="notice">
+    <div>
+        <span class="eyebrow">Etik Kullanım</span>
+
+        <h2>Yalnızca yetkili olduğunuz varlıkları analiz edin.</h2>
+
+        <p>
+            Digital Footprint Auditor kişi araştırma, izinsiz profil
+            çıkarma veya saldırı amaçlı kullanım için tasarlanmamıştır.
+        </p>
+    </div>
+
+    <a class="button button-secondary" asp-page="/About">
+        Detayları Gör
+    </a>
+</section>

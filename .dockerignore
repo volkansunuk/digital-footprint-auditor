@@ -1,0 +1,9 @@
+**/bin
+**/obj
+**/.vs
+**/.vscode
+.git
+.gitignore
+README.md
+node_modules
+**/appsettings.Development.json

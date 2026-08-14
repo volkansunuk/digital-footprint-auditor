@@ -1,0 +1,27 @@
+{
+  "name": "digital-footprint-auditor",
+  "version": "1.0.0",
+  "description": "Kendi dijital ayak izinizi ve size ait domainlerin temel güvenlik durumunu analiz eden, **eğitim amaçlı** bir web uygulaması.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/volkansunuk/digital-footprint-auditor.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/volkansunuk/digital-footprint-auditor/issues"
+  },
+  "homepage": "https://github.com/volkansunuk/digital-footprint-auditor#readme",
+  "dependencies": {
+    "@microsoft/signalr": "^10.0.11"
+  }
+}

@@ -1,0 +1,43 @@
+@page
+@model DigitalFootprintAuditor.Api.Pages.AboutModel
+
+@{
+    ViewData["Title"] = "Hakkında ve Etik Kullanım";
+}
+
+<section class="page-header">
+    <span class="eyebrow">Proje Hakkında</span>
+
+    <h1>Hakkında ve Etik Kullanım</h1>
+
+    <p>
+        Digital Footprint Auditor, kullanıcıların kendilerine ait
+        dijital varlıklar üzerinde temel güvenlik kontrolleri
+        gerçekleştirebilmesi için geliştirilmiş eğitim amaçlı
+        bir uygulamadır.
+    </p>
+</section>
+
+<div class="two-column-grid">
+    <section class="info-card">
+        <h2>İzinli Kullanım</h2>
+
+        <ul class="check-list">
+            <li>Kendi e-posta adresiniz</li>
+            <li>Kendi GitHub hesabınız</li>
+            <li>Sahibi veya yöneticisi olduğunuz domainler</li>
+            <li>Herkese açık ve izinli API kaynakları</li>
+        </ul>
+    </section>
+
+    <section class="info-card danger-card">
+        <h2>Kapsam Dışı Kullanımlar</h2>
+
+        <ul class="check-list">
+            <li>Başka kişileri izinsiz araştırmak</li>
+            <li>Gizli profillere erişmek</li>
+            <li>Sızdırılmış hassas verileri görüntülemek</li>
+            <li>Platform kurallarını ihlal eden scraping işlemleri</li>
+        </ul>
+    </section>
+</div>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"] - Digital Footprint Auditor</title>
+
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+
+<body>
+    <header class="site-header">
+        <nav class="navbar">
+            <a class="brand" asp-page="/Index">
+                Digital Footprint Auditor
+            </a>
+
+            <div class="nav-links">
+                <a asp-page="/Index">Ana Sayfa</a>
+                <a asp-page="/NewScan">Yeni Tarama</a>
+                <a asp-page="/ScanHistory">Tarama Geçmişi</a>
+                <a asp-page="/ScanDetail">Tarama Detayı</a>
+                <a asp-page="/About">Hakkında ve Etik Kullanım</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="page-container">
+        @RenderBody()
+    </main>
+
+    <footer class="site-footer">
+        <p>
+            Digital Footprint Auditor
+            <span>•</span>
+            Eğitim amaçlı ve savunmacı kullanım
+        </p>
+    </footer>
+</body>
+</html>
